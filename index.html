@@ -1,0 +1,2496 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LTcine TV - Panel Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;700;900&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #2563EB;
+            --primary-yellow: #FCD34D;
+            --dark-blue: #1E3A8A;
+            --darker-blue: #0F172A;
+            --light-blue: #DBEAFE;
+            --success: #10B981;
+            --danger: #EF4444;
+            --warning: #F59E0B;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 50%, #0F172A 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Background Animation */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bg-animation::before,
+        .bg-animation::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.25;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .bg-animation::before {
+            width: 600px;
+            height: 600px;
+            background: var(--primary-blue);
+            top: -200px;
+            right: -200px;
+        }
+
+        .bg-animation::after {
+            width: 500px;
+            height: 500px;
+            background: var(--primary-yellow);
+            bottom: -150px;
+            left: -150px;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -50px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+        }
+
+        /* Login Page */
+        .login-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            text-align: center;
+        }
+
+        .login-logo {
+            width: 120px;
+            height: 90px;
+            margin: 0 auto 1.5rem;
+            filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.5));
+        }
+
+        .login-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-title span {
+            color: var(--primary-yellow);
+        }
+
+        .login-subtitle {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3.2rem;
+            border: 2px solid var(--glass-border);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.95);
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+            color: white;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.6);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #DC2626);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Admin Layout */
+        .admin-layout {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .admin-layout.active {
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            padding: 2rem 1rem;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0 1rem 2rem;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-logo {
+            width: 50px;
+            height: 38px;
+        }
+
+        .sidebar-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .sidebar-title span {
+            color: var(--primary-yellow);
+        }
+
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.9rem 1.2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.08);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+            color: white;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        .nav-item i {
+            width: 24px;
+            font-size: 1.1rem;
+        }
+
+        .nav-item.logout {
+            margin-top: 1rem;
+            color: var(--danger);
+        }
+
+        .nav-item.logout:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .page-title i {
+            color: var(--primary-yellow);
+            margin-right: 0.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-yellow));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* Section */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 1.8rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(37, 99, 235, 0.3);
+        }
+
+        .stat-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon.blue { background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue)); }
+        .stat-icon.yellow { background: linear-gradient(135deg, var(--primary-yellow), #F59E0B); color: var(--dark-blue); }
+        .stat-icon.green { background: linear-gradient(135deg, var(--success), #059669); }
+        .stat-icon.red { background: linear-gradient(135deg, var(--danger), #DC2626); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .form-label .required {
+            color: var(--danger);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border: 2px solid var(--glass-border);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.95);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        select.form-control {
+            cursor: pointer;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Rich Text Editor */
+        .editor-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+
+        .editor-container:focus-within {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+
+        .editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            padding: 0.8rem;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 0.2rem;
+            padding-right: 0.6rem;
+            margin-right: 0.3rem;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .toolbar-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #475569;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .toolbar-btn:hover {
+            background: #e2e8f0;
+            color: var(--primary-blue);
+        }
+
+        .toolbar-btn.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .toolbar-select {
+            padding: 0.4rem 0.6rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.85rem;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .toolbar-select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .toolbar-color {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 0;
+            background: transparent;
+        }
+
+        .editor-content {
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 1.2rem;
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #333;
+        }
+
+        .editor-content:focus {
+            outline: none;
+        }
+
+        .editor-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .word-counter {
+            text-align: right;
+            padding: 0.5rem 1rem;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+
+        .word-counter.warning {
+            color: var(--warning);
+            font-weight: 600;
+        }
+
+        .word-counter.danger {
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        /* Items List */
+        .items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .item-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+            flex-wrap: wrap;
+        }
+
+        .item-card:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--primary-blue);
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .item-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.4rem;
+        }
+
+        .item-meta {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.85rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .item-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .btn-icon.edit {
+            background: rgba(37, 99, 235, 0.2);
+            color: var(--primary-blue);
+        }
+
+        .btn-icon.edit:hover {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-icon.delete {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .btn-icon.delete:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-icon.view {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .btn-icon.view:hover {
+            background: var(--success);
+            color: white;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-blue { background: rgba(37, 99, 235, 0.2); color: #60A5FA; }
+        .badge-yellow { background: rgba(252, 211, 77, 0.2); color: var(--primary-yellow); }
+        .badge-green { background: rgba(16, 185, 129, 0.2); color: #34D399; }
+        .badge-red { background: rgba(239, 68, 68, 0.2); color: #F87171; }
+        .badge-purple { background: rgba(139, 92, 246, 0.2); color: #A78BFA; }
+
+        /* Image Upload */
+        .image-upload {
+            border: 2px dashed var(--glass-border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.03);
+        }
+
+        .image-upload:hover {
+            border-color: var(--primary-blue);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .image-upload i {
+            font-size: 3rem;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+
+        .image-upload p {
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 0.5rem;
+        }
+
+        .image-upload small {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.85rem;
+        }
+
+        .image-preview {
+            margin-top: 1rem;
+            max-width: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #1E3A8A, #0F172A);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--danger);
+        }
+
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .toast {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            color: white;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            min-width: 300px;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+        .toast.info { border-left: 4px solid var(--primary-blue); }
+
+        .toast i {
+            font-size: 1.3rem;
+        }
+
+        .toast.success i { color: var(--success); }
+        .toast.error i { color: var(--danger); }
+        .toast.info i { color: var(--primary-blue); }
+
+        /* Loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 200;
+            width: 45px;
+            height: 45px;
+            border: none;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .menu-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1.5rem;
+                padding-top: 5rem;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .item-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .item-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .modal {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Switch Toggle */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255,255,255,0.2);
+            transition: .4s;
+            border-radius: 26px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--success);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .switch-label {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Login Page -->
+    <div class="login-page" id="loginPage">
+        <div class="login-card">
+            <svg class="login-logo" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+                <line x1="60" y1="60" x2="40" y2="25" stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="40" cy="25" r="6" fill="#2563EB"/>
+                <line x1="90" y1="60" x2="110" y2="25" stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="110" cy="25" r="6" fill="#2563EB"/>
+                <path d="M 30 70 Q 30 60 40 60 L 120 60 Q 130 60 130 70 L 130 120 Q 130 130 120 130 L 40 130 Q 30 130 30 120 Z" fill="#2563EB" opacity="0.95"/>
+                <text x="38" y="110" font-family="Poppins" font-weight="900" font-size="45" fill="#2563EB">LT</text>
+                <text x="95" y="110" font-family="Poppins" font-weight="400" font-size="32" fill="#2563EB">cine</text>
+                <rect x="135" y="75" width="55" height="45" rx="10" fill="#2563EB"/>
+                <text x="142" y="107" font-family="Poppins" font-weight="800" font-size="28" fill="#FCD34D">TV</text>
+            </svg>
+            <h1 class="login-title">LTcine <span>TV</span></h1>
+            <p class="login-subtitle">Panel d'Administration</p>
+            
+            <form class="login-form" id="loginForm">
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="loginEmail" placeholder="Email administrateur" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+                </div>
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Se connecter
+                </button>
+            </form>
+            
+            <p style="margin-top: 1.5rem; color: rgba(255,255,255,0.5); font-size: 0.85rem;">
+                <i class="fas fa-shield-alt"></i> Accès réservé aux administrateurs
+            </p>
+        </div>
+    </div>
+
+    <!-- Admin Layout -->
+    <div class="admin-layout" id="adminLayout">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <svg class="sidebar-logo" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 30 70 Q 30 60 40 60 L 120 60 Q 130 60 130 70 L 130 120 Q 130 130 120 130 L 40 130 Q 30 130 30 120 Z" fill="#2563EB"/>
+                    <rect x="135" y="75" width="55" height="45" rx="10" fill="#2563EB"/>
+                    <text x="142" y="107" font-family="Poppins" font-weight="800" font-size="28" fill="#FCD34D">TV</text>
+                </svg>
+                <div class="sidebar-title">LTcine <span>TV</span></div>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item active" data-section="dashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Tableau de bord</span>
+                </li>
+                <li class="nav-item" data-section="ticker">
+                    <i class="fas fa-bolt"></i>
+                    <span>Bande roulante</span>
+                </li>
+                <li class="nav-item" data-section="verses">
+                    <i class="fas fa-book-bible"></i>
+                    <span>Verset du jour</span>
+                </li>
+                <li class="nav-item" data-section="news">
+                    <i class="fas fa-newspaper"></i>
+                    <span>Actualités</span>
+                </li>
+                <li class="nav-item" data-section="live">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Directs</span>
+                </li>
+                <li class="nav-item" data-section="downloads">
+                    <i class="fas fa-download"></i>
+                    <span>Fichiers</span>
+                </li>
+                <li class="nav-item" data-section="subscribers">
+                    <i class="fas fa-users"></i>
+                    <span>Abonnés</span>
+                </li>
+                <li class="nav-item logout" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Déconnexion</span>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section class="section active" id="section-dashboard">
+                <div class="top-bar">
+                    <h1 class="page-title"><i class="fas fa-tachometer-alt"></i> Tableau de bord</h1>
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <div>
+                            <div style="font-weight: 600;" id="userName">Admin</div>
+                            <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6);" id="userEmail">admin@ltcine.com</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-newspaper"></i>
+                        </div>
+                        <div class="stat-value" id="statNews">0</div>
+                        <div class="stat-label">Actualités</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon yellow">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <div class="stat-value" id="statTicker">0</div>
+                        <div class="stat-label">Infos roulantes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <i class="fas fa-broadcast-tower"></i>
+                        </div>
+                        <div class="stat-value" id="statLive">0</div>
+                        <div class="stat-label">Directs actifs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-value" id="statSubscribers">0</div>
+                        <div class="stat-label">Abonnés</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-info-circle" style="color: var(--primary-yellow);"></i> Bienvenue sur le Panel Admin</h3>
+                    </div>
+                    <p style="color: rgba(255,255,255,0.8); line-height: 1.8;">
+                        Gérez facilement tout le contenu de votre site LTcine TV. Vous pouvez ajouter des actualités avec un éditeur de texte riche, gérer les directs YouTube/Facebook, uploader des fichiers téléchargeables, et bien plus encore.
+                    </p>
+                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="navigateTo('news')">
+                            <i class="fas fa-plus"></i> Nouvelle actualité
+                        </button>
+                        <button class="btn btn-success" onclick="navigateTo('live')">
+                            <i class="fas fa-broadcast-tower"></i> Nouveau direct
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Ticker Section -->
+            <section class="section" id="section-ticker">
+                <div class="top-bar">
+                    <h1 class="page-title"><i class="fas fa-bolt"></i> Bande Roulante</h1>
+                    <button class="btn btn-primary" onclick="openTickerModal()">
+                        <i class="fas fa-plus"></i> Ajouter
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Informations défilantes</h3>
+                    </div>
+                    <div class="items-list" id="tickerList">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Verses Section -->
+            <section class="section" id="section-verses">
+                <div class="top-bar">
+                    <h1 class="page-title"><i class="fas fa-book-bible"></i> Verset du Jour</h1>
+                    <button class="btn btn-primary" onclick="openVerseModal()">
+                        <i class="fas fa-plus"></i> Ajouter un verset
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Liste des versets</h3>
+                    </div>
+                    <div class="items-list" id="versesList">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- News Section -->
+            <section class="section" id="section-news">
+                <div class="top-bar">
+                    <h1 class="page-title"><i class="fas fa-newspaper"></i> Actualités</h1>
+                    <button class="btn btn-primary" onclick="openNewsModal()">
+                        <i class="fas fa-plus"></i> Nouvelle actualité
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Toutes les actualités</h3>
+                    </div>
+                    <div class="items-list" id="newsList">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Live Section -->
+            <section class="section" id="section-live">
+                <div class="top-bar">
+                    <h1 class="page-title"><i class="fas fa-broadcast-tower"></i> Directs</h1>
+                    <button class="btn btn-primary" onclick="openLiveModal()">
+                        <i class="fas fa-plus"></i> Nouveau direct
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Directs en cours et passés</h3>
+                    </div>
+                    <div class="items-list" id="liveList">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Downloads Section -->
+            <section class="section" id="section-downloads">
+                <div class="top-bar">
+                    <h1 class="page-title"><i class="fas fa-download"></i> Fichiers Téléchargeables</h1>
+                    <button class="btn btn-primary" onclick="openDownloadModal()">
+                        <i class="fas fa-plus"></i> Ajouter un fichier
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Fichiers disponibles</h3>
+                    </div>
+                    <div class="items-list" id="downloadsList">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Subscribers Section -->
+            <section class="section" id="section-subscribers">
+                <div class="top-bar">
+                    <h1 class="page-title"><i class="fas fa-users"></i> Abonnés</h1>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Liste des abonnés Gmail</h3>
+                    </div>
+                    <div class="items-list" id="subscribersList">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Ticker Modal -->
+    <div class="modal-overlay" id="tickerModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('tickerModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="modal-title" id="tickerModalTitle">Ajouter une info roulante</h2>
+            <form id="tickerForm">
+                <input type="hidden" id="tickerId">
+                <div class="form-group">
+                    <label class="form-label">Texte de l'information <span class="required">*</span></label>
+                    <textarea class="form-control" id="tickerText" rows="3" required></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('tickerModal')">Annuler</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Verse Modal -->
+    <div class="modal-overlay" id="verseModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('verseModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="modal-title" id="verseModalTitle">Ajouter un verset</h2>
+            <form id="verseForm">
+                <input type="hidden" id="verseId">
+                <div class="form-group">
+                    <label class="form-label">Date du verset <span class="required">*</span></label>
+                    <input type="date" class="form-control" id="verseDate" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Texte du verset <span class="required">*</span></label>
+                    <textarea class="form-control" id="verseText" rows="5" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Référence (ex: Jean 3:16) <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="verseReference" placeholder="Jean 3:16" required>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('verseModal')">Annuler</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- News Modal -->
+    <div class="modal-overlay" id="newsModal">
+        <div class="modal" style="max-width: 950px;">
+            <button class="modal-close" onclick="closeModal('newsModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="modal-title" id="newsModalTitle">Nouvelle actualité</h2>
+            <form id="newsForm">
+                <input type="hidden" id="newsId">
+                <div class="form-group">
+                    <label class="form-label">Titre <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="newsTitle" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Catégorie <span class="required">*</span></label>
+                        <select class="form-control" id="newsCategory" required>
+                            <option value="actualites"> Actualités</option>
+                            <option value="reportages">🎥 Reportages</option>
+                            <option value="publicites">📢 Publicités</option>
+                            <option value="debats">💬 Débats</option>
+                            <option value="micro-trottoirs">🎤 Micro-trottoirs</option>
+                            <option value="evangelisation">✝️ Évangélisation</option>
+                            <option value="mariage">💒 Mariage</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Image de couverture</label>
+                        <div class="image-upload" onclick="document.getElementById('newsImageInput').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Cliquez pour uploader une image</p>
+                            <small>JPG, PNG (max 5MB)</small>
+                            <input type="file" id="newsImageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'newsImagePreview', 'newsImageUrl')">
+                        </div>
+                        <div class="image-preview" id="newsImagePreview"></div>
+                        <input type="hidden" id="newsImageUrl">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Extrait / Résumé (affiché sur la carte) <span class="required">*</span></label>
+                    <textarea class="form-control" id="newsExcerpt" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contenu complet (jusqu'à 2000 mots) <span class="required">*</span></label>
+                    <div class="editor-container">
+                        <div class="editor-toolbar">
+                            <div class="toolbar-group">
+                                <select class="toolbar-select" onchange="execCmd('fontName', this.value)" title="Police">
+                                    <option value="Poppins">Poppins</option>
+                                    <option value="Playfair Display">Playfair Display</option>
+                                    <option value="Roboto">Roboto</option>
+                                    <option value="Open Sans">Open Sans</option>
+                                    <option value="Montserrat">Montserrat</option>
+                                    <option value="Arial">Arial</option>
+                                    <option value="Georgia">Georgia</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Courier New">Courier New</option>
+                                    <option value="Verdana">Verdana</option>
+                                </select>
+                                <select class="toolbar-select" onchange="execCmd('fontSize', this.value)" title="Taille">
+                                    <option value="1">Très petit</option>
+                                    <option value="2">Petit</option>
+                                    <option value="3" selected>Normal</option>
+                                    <option value="4">Moyen</option>
+                                    <option value="5">Grand</option>
+                                    <option value="6">Très grand</option>
+                                    <option value="7">Énorme</option>
+                                </select>
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="execCmd('bold')" title="Gras">
+                                    <i class="fas fa-bold"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="execCmd('italic')" title="Italique">
+                                    <i class="fas fa-italic"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="execCmd('underline')" title="Souligné">
+                                    <i class="fas fa-underline"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="execCmd('strikeThrough')" title="Barré">
+                                    <i class="fas fa-strikethrough"></i>
+                                </button>
+                            </div>
+                            <div class="toolbar-group">
+                                <input type="color" class="toolbar-color" onchange="execCmd('foreColor', this.value)" title="Couleur du texte">
+                                <input type="color" class="toolbar-color" onchange="execCmd('hiliteColor', this.value)" title="Couleur de fond" value="#FFFF00">
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="execCmd('justifyLeft')" title="Aligner à gauche">
+                                    <i class="fas fa-align-left"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="execCmd('justifyCenter')" title="Centrer">
+                                    <i class="fas fa-align-center"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="execCmd('justifyRight')" title="Aligner à droite">
+                                    <i class="fas fa-align-right"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="execCmd('justifyFull')" title="Justifier">
+                                    <i class="fas fa-align-justify"></i>
+                                </button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="execCmd('insertUnorderedList')" title="Liste à puces">
+                                    <i class="fas fa-list-ul"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="execCmd('insertOrderedList')" title="Liste numérotée">
+                                    <i class="fas fa-list-ol"></i>
+                                </button>
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="insertLink()" title="Insérer un lien">
+                                    <i class="fas fa-link"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="document.getElementById('editorImageInput').click()" title="Insérer une image">
+                                    <i class="fas fa-image"></i>
+                                </button>
+                                <input type="file" id="editorImageInput" accept="image/*" style="display: none;" onchange="insertEditorImage(event)">
+                            </div>
+                            <div class="toolbar-group">
+                                <button type="button" class="toolbar-btn" onclick="execCmd('undo')" title="Annuler">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="execCmd('redo')" title="Refaire">
+                                    <i class="fas fa-redo"></i>
+                                </button>
+                                <button type="button" class="toolbar-btn" onclick="execCmd('removeFormat')" title="Effacer le formatage">
+                                    <i class="fas fa-eraser"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="editor-content" id="newsContent" contenteditable="true"></div>
+                        <div class="word-counter" id="wordCounter">0 / 2000 mots</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('newsModal')">Annuler</button>
+                    <button type="submit" class="btn btn-primary" id="newsSubmitBtn">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Live Modal -->
+    <div class="modal-overlay" id="liveModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('liveModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="modal-title" id="liveModalTitle">Nouveau direct</h2>
+            <form id="liveForm">
+                <input type="hidden" id="liveId">
+                <div class="form-group">
+                    <label class="form-label">Titre du direct <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="liveTitle" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Plateforme <span class="required">*</span></label>
+                        <select class="form-control" id="livePlatform" required>
+                            <option value="youtube">YouTube</option>
+                            <option value="facebook">Facebook</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Lien du direct <span class="required">*</span></label>
+                        <input type="url" class="form-control" id="liveLink" placeholder="https://..." required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="switch-label">
+                        <label class="switch">
+                            <input type="checkbox" id="liveActive" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Direct actif (visible sur le site)</span>
+                    </label>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('liveModal')">Annuler</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Download Modal -->
+    <div class="modal-overlay" id="downloadModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('downloadModal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h2 class="modal-title" id="downloadModalTitle">Ajouter un fichier</h2>
+            <form id="downloadForm">
+                <input type="hidden" id="downloadId">
+                <div class="form-group">
+                    <label class="form-label">Nom du fichier <span class="required">*</span></label>
+                    <input type="text" class="form-control" id="downloadTitle" placeholder="Ex: Rapport annuel 2026" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description <span class="required">*</span></label>
+                    <textarea class="form-control" id="downloadDescription" rows="3" placeholder="Décrivez le contenu du fichier..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type de fichier</label>
+                    <select class="form-control" id="downloadType">
+                        <option value="pdf">📄 PDF</option>
+                        <option value="doc">📝 Document Word</option>
+                        <option value="xls">📊 Excel</option>
+                        <option value="zip">📦 Archive ZIP</option>
+                        <option value="image">🖼️ Image</option>
+                        <option value="video">🎥 Vidéo</option>
+                        <option value="other">📁 Autre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Lien Google Drive <span class="required">*</span></label>
+                    <input type="url" class="form-control" id="downloadLink" placeholder="https://drive.google.com/..." required>
+                    <small style="color: rgba(255,255,255,0.6); margin-top: 0.3rem; display: block;">
+                        <i class="fas fa-info-circle"></i> Assurez-vous que le fichier est en accès public sur Google Drive
+                    </small>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('downloadModal')">Annuler</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCcM46qQo3bTCFo_hmwoYLvOKWVhqLJdnQ",
+            authDomain: "ltcine.firebaseapp.com",
+            projectId: "ltcine",
+            storageBucket: "ltcine.firebasestorage.app",
+            messagingSenderId: "432697683333",
+            appId: "1:432697683333:web:c9069d1e82827c608168ec",
+            measurementId: "G-E33CXDWHNF"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // Admin email (à personnaliser)
+        const ADMIN_EMAIL = "admin@ltcine.com";
+
+        // Toast System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                info: 'fa-info-circle'
+            };
+            
+            toast.innerHTML = `
+                <i class="fas ${icons[type]}"></i>
+                <span>${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.4s ease reverse';
+                setTimeout(() => toast.remove(), 400);
+            }, 3500);
+        }
+
+        // Auth State
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('adminLayout').classList.add('active');
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('userName').textContent = user.email.split('@')[0];
+                document.getElementById('userAvatar').textContent = user.email[0].toUpperCase();
+                loadDashboard();
+            } else {
+                document.getElementById('loginPage').style.display = 'flex';
+                document.getElementById('adminLayout').classList.remove('active');
+            }
+        });
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Connexion...';
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                showToast('Connexion réussie !', 'success');
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Se connecter';
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
+                await auth.signOut();
+                showToast('Déconnexion réussie', 'info');
+            }
+        });
+
+        // Navigation
+        function navigateTo(section) {
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`.nav-item[data-section="${section}"]`).classList.add('active');
+            
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`section-${section}`).classList.add('active');
+            
+            // Load data
+            if (section === 'dashboard') loadDashboard();
+            if (section === 'ticker') loadTicker();
+            if (section === 'verses') loadVerses();
+            if (section === 'news') loadNews();
+            if (section === 'live') loadLive();
+            if (section === 'downloads') loadDownloads();
+            if (section === 'subscribers') loadSubscribers();
+            
+            // Close mobile menu
+            document.getElementById('sidebar').classList.remove('open');
+        }
+
+        document.querySelectorAll('.nav-item[data-section]').forEach(item => {
+            item.addEventListener('click', () => navigateTo(item.dataset.section));
+        });
+
+        // Mobile Menu
+        document.getElementById('menuToggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // Dashboard
+        async function loadDashboard() {
+            try {
+                const [newsSnap, tickerSnap, liveSnap, subSnap] = await Promise.all([
+                    db.collection('news').get(),
+                    db.collection('ticker').get(),
+                    db.collection('live').where('active', '==', true).get(),
+                    db.collection('subscribers').get()
+                ]);
+                
+                document.getElementById('statNews').textContent = newsSnap.size;
+                document.getElementById('statTicker').textContent = tickerSnap.size;
+                document.getElementById('statLive').textContent = liveSnap.size;
+                document.getElementById('statSubscribers').textContent = subSnap.size;
+            } catch (error) {
+                console.error('Dashboard error:', error);
+            }
+        }
+
+        // Modal Functions
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // Close modal on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+
+        // ============ TICKER ============
+        async function loadTicker() {
+            const list = document.getElementById('tickerList');
+            list.innerHTML = '<div class="loading-spinner"></div>';
+            
+            try {
+                const snapshot = await db.collection('ticker').orderBy('timestamp', 'desc').get();
+                
+                if (snapshot.empty) {
+                    list.innerHTML = '<div class="empty-state"><i class="fas fa-bolt"></i><p>Aucune info roulante</p></div>';
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('fr-FR') : '';
+                    html += `
+                        <div class="item-card">
+                            <div class="item-info">
+                                <div class="item-title">${data.text}</div>
+                                <div class="item-meta">
+                                    <span><i class="fas fa-calendar"></i> ${date}</span>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-icon edit" onclick="editTicker('${doc.id}', '${data.text.replace(/'/g, "\\'")}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon delete" onclick="deleteTicker('${doc.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            } catch (error) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Erreur de chargement</p></div>';
+            }
+        }
+
+        function openTickerModal() {
+            document.getElementById('tickerForm').reset();
+            document.getElementById('tickerId').value = '';
+            document.getElementById('tickerModalTitle').textContent = 'Ajouter une info roulante';
+            openModal('tickerModal');
+        }
+
+        function editTicker(id, text) {
+            document.getElementById('tickerId').value = id;
+            document.getElementById('tickerText').value = text;
+            document.getElementById('tickerModalTitle').textContent = 'Modifier l\'info roulante';
+            openModal('tickerModal');
+        }
+
+        document.getElementById('tickerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('tickerId').value;
+            const text = document.getElementById('tickerText').value;
+            
+            try {
+                const data = {
+                    text: text,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                if (id) {
+                    await db.collection('ticker').doc(id).update(data);
+                    showToast('Info modifiée avec succès', 'success');
+                } else {
+                    await db.collection('ticker').add(data);
+                    showToast('Info ajoutée avec succès', 'success');
+                }
+                
+                closeModal('tickerModal');
+                loadTicker();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        async function deleteTicker(id) {
+            if (!confirm('Supprimer cette info roulante ?')) return;
+            try {
+                await db.collection('ticker').doc(id).delete();
+                showToast('Info supprimée', 'success');
+                loadTicker();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // ============ VERSES ============
+        async function loadVerses() {
+            const list = document.getElementById('versesList');
+            list.innerHTML = '<div class="loading-spinner"></div>';
+            
+            try {
+                const snapshot = await db.collection('verses').orderBy('date', 'desc').get();
+                
+                if (snapshot.empty) {
+                    list.innerHTML = '<div class="empty-state"><i class="fas fa-book-bible"></i><p>Aucun verset ajouté</p></div>';
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    html += `
+                        <div class="item-card">
+                            <div class="item-info">
+                                <div class="item-title">${data.text.substring(0, 80)}${data.text.length > 80 ? '...' : ''}</div>
+                                <div class="item-meta">
+                                    <span><i class="fas fa-calendar"></i> ${data.date}</span>
+                                    <span><i class="fas fa-bookmark"></i> ${data.reference}</span>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-icon edit" onclick='editVerse("${doc.id}", ${JSON.stringify(data)})'>
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon delete" onclick="deleteVerse('${doc.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            } catch (error) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Erreur de chargement</p></div>';
+            }
+        }
+
+        function openVerseModal() {
+            document.getElementById('verseForm').reset();
+            document.getElementById('verseId').value = '';
+            document.getElementById('verseDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('verseModalTitle').textContent = 'Ajouter un verset';
+            openModal('verseModal');
+        }
+
+        function editVerse(id, data) {
+            document.getElementById('verseId').value = id;
+            document.getElementById('verseDate').value = data.date;
+            document.getElementById('verseText').value = data.text;
+            document.getElementById('verseReference').value = data.reference;
+            document.getElementById('verseModalTitle').textContent = 'Modifier le verset';
+            openModal('verseModal');
+        }
+
+        document.getElementById('verseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('verseId').value;
+            const data = {
+                date: document.getElementById('verseDate').value,
+                text: document.getElementById('verseText').value,
+                reference: document.getElementById('verseReference').value
+            };
+            
+            try {
+                if (id) {
+                    await db.collection('verses').doc(id).update(data);
+                    showToast('Verset modifié', 'success');
+                } else {
+                    await db.collection('verses').add(data);
+                    showToast('Verset ajouté', 'success');
+                }
+                closeModal('verseModal');
+                loadVerses();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        async function deleteVerse(id) {
+            if (!confirm('Supprimer ce verset ?')) return;
+            try {
+                await db.collection('verses').doc(id).delete();
+                showToast('Verset supprimé', 'success');
+                loadVerses();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // ============ NEWS ============
+        async function loadNews() {
+            const list = document.getElementById('newsList');
+            list.innerHTML = '<div class="loading-spinner"></div>';
+            
+            try {
+                const snapshot = await db.collection('news').orderBy('timestamp', 'desc').get();
+                
+                if (snapshot.empty) {
+                    list.innerHTML = '<div class="empty-state"><i class="fas fa-newspaper"></i><p>Aucune actualité</p></div>';
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('fr-FR') : '';
+                    const categoryLabels = {
+                        'actualites': 'Actualités',
+                        'reportages': 'Reportages',
+                        'publicites': 'Publicités',
+                        'debats': 'Débats',
+                        'micro-trottoirs': 'Micro-trottoirs',
+                        'evangelisation': 'Évangélisation',
+                        'mariage': 'Mariage'
+                    };
+                    const badgeColors = {
+                        'actualites': 'blue',
+                        'reportages': 'purple',
+                        'publicites': 'yellow',
+                        'debats': 'green',
+                        'micro-trottoirs': 'red',
+                        'evangelisation': 'blue',
+                        'mariage': 'purple'
+                    };
+                    
+                    html += `
+                        <div class="item-card">
+                            <div class="item-info">
+                                <div class="item-title">${data.title}</div>
+                                <div class="item-meta">
+                                    <span class="badge badge-${badgeColors[data.category] || 'blue'}">${categoryLabels[data.category] || data.category}</span>
+                                    <span><i class="fas fa-calendar"></i> ${date}</span>
+                                    ${data.imageUrl ? '<span><i class="fas fa-image"></i> Avec image</span>' : ''}
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-icon view" onclick="viewNews('${doc.id}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn-icon edit" onclick="editNews('${doc.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon delete" onclick="deleteNews('${doc.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            } catch (error) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Erreur de chargement</p></div>';
+            }
+        }
+
+        function openNewsModal() {
+            document.getElementById('newsForm').reset();
+            document.getElementById('newsId').value = '';
+            document.getElementById('newsContent').innerHTML = '';
+            document.getElementById('newsImagePreview').innerHTML = '';
+            document.getElementById('newsImageUrl').value = '';
+            document.getElementById('newsModalTitle').textContent = 'Nouvelle actualité';
+            updateWordCount();
+            openModal('newsModal');
+        }
+
+        async function editNews(id) {
+            try {
+                const doc = await db.collection('news').doc(id).get();
+                if (!doc.exists) return;
+                
+                const data = doc.data();
+                document.getElementById('newsId').value = id;
+                document.getElementById('newsTitle').value = data.title;
+                document.getElementById('newsCategory').value = data.category;
+                document.getElementById('newsExcerpt').value = data.excerpt;
+                document.getElementById('newsContent').innerHTML = data.content;
+                document.getElementById('newsImageUrl').value = data.imageUrl || '';
+                
+                if (data.imageUrl) {
+                    document.getElementById('newsImagePreview').innerHTML = `<img src="${data.imageUrl}" alt="Preview">`;
+                }
+                
+                document.getElementById('newsModalTitle').textContent = 'Modifier l\'actualité';
+                updateWordCount();
+                openModal('newsModal');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        function viewNews(id) {
+            db.collection('news').doc(id).get().then(doc => {
+                if (!doc.exists) return;
+                const data = doc.data();
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay active';
+                modal.innerHTML = `
+                    <div class="modal" style="max-width: 900px;">
+                        <button class="modal-close" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        ${data.imageUrl ? `<img src="${data.imageUrl}" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 12px; margin-bottom: 1.5rem;">` : ''}
+                        <h2 style="font-size: 2rem; margin-bottom: 1rem;">${data.title}</h2>
+                        <p style="color: var(--primary-yellow); margin-bottom: 1.5rem;">
+                            <i class="fas fa-calendar"></i> ${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('fr-FR', {year: 'numeric', month: 'long', day: 'numeric'}) : ''}
+                            <span class="badge badge-blue" style="margin-left: 1rem;">${data.category}</span>
+                        </p>
+                        <div style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">${data.content}</div>
+                    </div>
+                `;
+                modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+                document.body.appendChild(modal);
+            });
+        }
+
+        // Rich Text Editor
+        function execCmd(command, value = null) {
+            document.execCommand(command, false, value);
+            document.getElementById('newsContent').focus();
+        }
+
+        function insertLink() {
+            const url = prompt('Entrez l\'URL du lien :');
+            if (url) {
+                execCmd('createLink', url);
+            }
+        }
+
+        async function insertEditorImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.startsWith('image/')) {
+                showToast('Veuillez sélectionner une image', 'error');
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Image trop volumineuse (max 5MB)', 'error');
+                return;
+            }
+            
+            showToast('Upload de l\'image en cours...', 'info');
+            
+            try {
+                const storageRef = storage.ref();
+                const imageRef = storageRef.child('news_images/' + Date.now() + '_' + file.name);
+                const snapshot = await imageRef.put(file);
+                const url = await snapshot.ref.getDownloadURL();
+                
+                execCmd('insertImage', url);
+                showToast('Image insérée avec succès', 'success');
+            } catch (error) {
+                showToast('Erreur lors de l\'upload: ' + error.message, 'error');
+            }
+            
+            event.target.value = '';
+        }
+
+        // Word Counter
+        document.getElementById('newsContent').addEventListener('input', updateWordCount);
+
+        function updateWordCount() {
+            const content = document.getElementById('newsContent').innerText.trim();
+            const words = content ? content.split(/\s+/).length : 0;
+            const counter = document.getElementById('wordCounter');
+            counter.textContent = `${words} / 2000 mots`;
+            
+            counter.classList.remove('warning', 'danger');
+            if (words > 1800) {
+                counter.classList.add('danger');
+            } else if (words > 1500) {
+                counter.classList.add('warning');
+            }
+        }
+
+        // Image Upload for Cover
+        async function handleImageUpload(event, previewId, urlId) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.startsWith('image/')) {
+                showToast('Veuillez sélectionner une image', 'error');
+                return;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Image trop volumineuse (max 5MB)', 'error');
+                return;
+            }
+            
+            showToast('Upload en cours...', 'info');
+            
+            try {
+                const storageRef = storage.ref();
+                const imageRef = storageRef.child('news_covers/' + Date.now() + '_' + file.name);
+                const snapshot = await imageRef.put(file);
+                const url = await snapshot.ref.getDownloadURL();
+                
+                document.getElementById(urlId).value = url;
+                document.getElementById(previewId).innerHTML = `<img src="${url}" alt="Preview">`;
+                showToast('Image uploadée avec succès', 'success');
+            } catch (error) {
+                showToast('Erreur: ' + error.message, 'error');
+            }
+        }
+
+        document.getElementById('newsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const content = document.getElementById('newsContent').innerHTML;
+            const wordCount = document.getElementById('newsContent').innerText.trim().split(/\s+/).length;
+            
+            if (wordCount > 2000) {
+                showToast('Le contenu dépasse 2000 mots', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('newsSubmitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> Enregistrement...';
+            
+            try {
+                const data = {
+                    title: document.getElementById('newsTitle').value,
+                    category: document.getElementById('newsCategory').value,
+                    excerpt: document.getElementById('newsExcerpt').value,
+                    content: content,
+                    imageUrl: document.getElementById('newsImageUrl').value,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                const id = document.getElementById('newsId').value;
+                
+                if (id) {
+                    await db.collection('news').doc(id).update(data);
+                    showToast('Actualité modifiée avec succès', 'success');
+                } else {
+                    await db.collection('news').add(data);
+                    showToast('Actualité publiée avec succès', 'success');
+                }
+                
+                closeModal('newsModal');
+                loadNews();
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer';
+            }
+        });
+
+        async function deleteNews(id) {
+            if (!confirm('Supprimer cette actualité ?')) return;
+            try {
+                await db.collection('news').doc(id).delete();
+                showToast('Actualité supprimée', 'success');
+                loadNews();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // ============ LIVE ============
+        async function loadLive() {
+            const list = document.getElementById('liveList');
+            list.innerHTML = '<div class="loading-spinner"></div>';
+            
+            try {
+                const snapshot = await db.collection('live').orderBy('timestamp', 'desc').get();
+                
+                if (snapshot.empty) {
+                    list.innerHTML = '<div class="empty-state"><i class="fas fa-broadcast-tower"></i><p>Aucun direct</p></div>';
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('fr-FR') : '';
+                    const platformIcon = data.platform === 'youtube' ? 'fa-youtube' : 'fa-facebook';
+                    const platformColor = data.platform === 'youtube' ? 'red' : 'blue';
+                    
+                    html += `
+                        <div class="item-card">
+                            <div class="item-info">
+                                <div class="item-title">${data.title}</div>
+                                <div class="item-meta">
+                                    <span class="badge badge-${platformColor}"><i class="fab ${platformIcon}"></i> ${data.platform}</span>
+                                    <span><i class="fas fa-calendar"></i> ${date}</span>
+                                    <span class="badge ${data.active ? 'badge-green' : 'badge-red'}">
+                                        ${data.active ? '● Actif' : '○ Inactif'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-icon edit" onclick='editLive("${doc.id}", ${JSON.stringify(data)})'>
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon delete" onclick="deleteLive('${doc.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            } catch (error) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Erreur de chargement</p></div>';
+            }
+        }
+
+        function openLiveModal() {
+            document.getElementById('liveForm').reset();
+            document.getElementById('liveId').value = '';
+            document.getElementById('liveActive').checked = true;
+            document.getElementById('liveModalTitle').textContent = 'Nouveau direct';
+            openModal('liveModal');
+        }
+
+        function editLive(id, data) {
+            document.getElementById('liveId').value = id;
+            document.getElementById('liveTitle').value = data.title;
+            document.getElementById('livePlatform').value = data.platform;
+            document.getElementById('liveLink').value = data.link;
+            document.getElementById('liveActive').checked = data.active;
+            document.getElementById('liveModalTitle').textContent = 'Modifier le direct';
+            openModal('liveModal');
+        }
+
+        document.getElementById('liveForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('liveId').value;
+            const data = {
+                title: document.getElementById('liveTitle').value,
+                platform: document.getElementById('livePlatform').value,
+                link: document.getElementById('liveLink').value,
+                active: document.getElementById('liveActive').checked,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            try {
+                if (id) {
+                    await db.collection('live').doc(id).update(data);
+                    showToast('Direct modifié', 'success');
+                } else {
+                    await db.collection('live').add(data);
+                    showToast('Direct ajouté', 'success');
+                }
+                closeModal('liveModal');
+                loadLive();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        async function deleteLive(id) {
+            if (!confirm('Supprimer ce direct ?')) return;
+            try {
+                await db.collection('live').doc(id).delete();
+                showToast('Direct supprimé', 'success');
+                loadLive();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // ============ DOWNLOADS ============
+        async function loadDownloads() {
+            const list = document.getElementById('downloadsList');
+            list.innerHTML = '<div class="loading-spinner"></div>';
+            
+            try {
+                const snapshot = await db.collection('downloads').orderBy('timestamp', 'desc').get();
+                
+                if (snapshot.empty) {
+                    list.innerHTML = '<div class="empty-state"><i class="fas fa-download"></i><p>Aucun fichier</p></div>';
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('fr-FR') : '';
+                    const typeIcons = {
+                        'pdf': 'fa-file-pdf',
+                        'doc': 'fa-file-word',
+                        'xls': 'fa-file-excel',
+                        'zip': 'fa-file-archive',
+                        'image': 'fa-file-image',
+                        'video': 'fa-file-video',
+                        'other': 'fa-file'
+                    };
+                    
+                    html += `
+                        <div class="item-card">
+                            <div class="item-info">
+                                <div class="item-title"><i class="fas ${typeIcons[data.type] || 'fa-file'}" style="color: var(--primary-yellow); margin-right: 0.5rem;"></i> ${data.title}</div>
+                                <div class="item-meta">
+                                    <span><i class="fas fa-calendar"></i> ${date}</span>
+                                    <span><i class="fab fa-google-drive"></i> Google Drive</span>
+                                </div>
+                                <div style="margin-top: 0.5rem; color: rgba(255,255,255,0.7); font-size: 0.9rem;">${data.description}</div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-icon view" onclick="window.open('${data.link}', '_blank')">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                                <button class="btn-icon edit" onclick='editDownload("${doc.id}", ${JSON.stringify(data)})'>
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-icon delete" onclick="deleteDownload('${doc.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            } catch (error) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Erreur de chargement</p></div>';
+            }
+        }
+
+        function openDownloadModal() {
+            document.getElementById('downloadForm').reset();
+            document.getElementById('downloadId').value = '';
+            document.getElementById('downloadModalTitle').textContent = 'Ajouter un fichier';
+            openModal('downloadModal');
+        }
+
+        function editDownload(id, data) {
+            document.getElementById('downloadId').value = id;
+            document.getElementById('downloadTitle').value = data.title;
+            document.getElementById('downloadDescription').value = data.description;
+            document.getElementById('downloadType').value = data.type;
+            document.getElementById('downloadLink').value = data.link;
+            document.getElementById('downloadModalTitle').textContent = 'Modifier le fichier';
+            openModal('downloadModal');
+        }
+
+        document.getElementById('downloadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('downloadId').value;
+            const data = {
+                title: document.getElementById('downloadTitle').value,
+                description: document.getElementById('downloadDescription').value,
+                type: document.getElementById('downloadType').value,
+                link: document.getElementById('downloadLink').value,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
+            try {
+                if (id) {
+                    await db.collection('downloads').doc(id).update(data);
+                    showToast('Fichier modifié', 'success');
+                } else {
+                    await db.collection('downloads').add(data);
+                    showToast('Fichier ajouté', 'success');
+                }
+                closeModal('downloadModal');
+                loadDownloads();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        });
+
+        async function deleteDownload(id) {
+            if (!confirm('Supprimer ce fichier ?')) return;
+            try {
+                await db.collection('downloads').doc(id).delete();
+                showToast('Fichier supprimé', 'success');
+                loadDownloads();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        // ============ SUBSCRIBERS ============
+        async function loadSubscribers() {
+            const list = document.getElementById('subscribersList');
+            list.innerHTML = '<div class="loading-spinner"></div>';
+            
+            try {
+                const snapshot = await db.collection('subscribers').orderBy('timestamp', 'desc').get();
+                
+                if (snapshot.empty) {
+                    list.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>Aucun abonné</p></div>';
+                    return;
+                }
+                
+                let html = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('fr-FR') : '';
+                    
+                    html += `
+                        <div class="item-card">
+                            <div class="item-info">
+                                <div class="item-title"><i class="fas fa-user" style="color: var(--primary-yellow); margin-right: 0.5rem;"></i> ${data.name}</div>
+                                <div class="item-meta">
+                                    <span><i class="fas fa-envelope"></i> ${data.email}</span>
+                                    <span><i class="fas fa-calendar"></i> ${date}</span>
+                                    <span class="badge ${data.active ? 'badge-green' : 'badge-red'}">
+                                        ${data.active ? '● Actif' : '○ Inactif'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="btn-icon view" onclick="copyEmail('${data.email}')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button class="btn-icon delete" onclick="deleteSubscriber('${doc.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                list.innerHTML = html;
+            } catch (error) {
+                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Erreur de chargement</p></div>';
+            }
+        }
+
+        function copyEmail(email) {
+            navigator.clipboard.writeText(email).then(() => {
+                showToast('Email copié: ' + email, 'success');
+            });
+        }
+
+        async function deleteSubscriber(id) {
+            if (!confirm('Supprimer cet abonné ?')) return;
+            try {
+                await db.collection('subscribers').doc(id).delete();
+                showToast('Abonné supprimé', 'success');
+                loadSubscribers();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
