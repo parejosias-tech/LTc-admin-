@@ -1,2496 +1,1130 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LTcine TV - Panel Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;700;900&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary-blue: #2563EB;
-            --primary-yellow: #FCD34D;
-            --dark-blue: #1E3A8A;
-            --darker-blue: #0F172A;
-            --light-blue: #DBEAFE;
-            --success: #10B981;
-            --danger: #EF4444;
-            --warning: #F59E0B;
-            --glass-bg: rgba(255, 255, 255, 0.08);
-            --glass-border: rgba(255, 255, 255, 0.15);
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 50%, #0F172A 100%);
-            min-height: 100vh;
-            color: #fff;
-            overflow-x: hidden;
-        }
-
-        /* Background Animation */
-        .bg-animation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .bg-animation::before,
-        .bg-animation::after {
-            content: '';
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(120px);
-            opacity: 0.25;
-            animation: float 20s infinite ease-in-out;
-        }
-
-        .bg-animation::before {
-            width: 600px;
-            height: 600px;
-            background: var(--primary-blue);
-            top: -200px;
-            right: -200px;
-        }
-
-        .bg-animation::after {
-            width: 500px;
-            height: 500px;
-            background: var(--primary-yellow);
-            bottom: -150px;
-            left: -150px;
-            animation-delay: -10s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(50px, -50px) scale(1.1); }
-            66% { transform: translate(-30px, 30px) scale(0.9); }
-        }
-
-        /* Login Page */
-        .login-page {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 2rem;
-        }
-
-        .login-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 3rem;
-            max-width: 450px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-            text-align: center;
-        }
-
-        .login-logo {
-            width: 120px;
-            height: 90px;
-            margin: 0 auto 1.5rem;
-            filter: drop-shadow(0 4px 12px rgba(37, 99, 235, 0.5));
-        }
-
-        .login-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-            margin-bottom: 0.5rem;
-        }
-
-        .login-title span {
-            color: var(--primary-yellow);
-        }
-
-        .login-subtitle {
-            color: rgba(255,255,255,0.7);
-            margin-bottom: 2rem;
-            font-size: 0.95rem;
-        }
-
-        .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .input-group {
-            position: relative;
-        }
-
-        .input-group i {
-            position: absolute;
-            left: 1.2rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--primary-blue);
-            font-size: 1.1rem;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 1rem 1rem 1rem 3.2rem;
-            border: 2px solid var(--glass-border);
-            border-radius: 12px;
-            background: rgba(255,255,255,0.95);
-            font-family: 'Poppins', sans-serif;
-            font-size: 1rem;
-            color: #333;
-            transition: all 0.3s ease;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
-        }
-
-        .btn {
-            padding: 1rem 1.5rem;
-            border: none;
-            border-radius: 12px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.6rem;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
-            color: white;
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.6);
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, var(--success), #059669);
-            color: white;
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, var(--danger), #DC2626);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: rgba(255,255,255,0.1);
-            color: white;
-            border: 1px solid var(--glass-border);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255,255,255,0.15);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        /* Admin Layout */
-        .admin-layout {
-            display: none;
-            min-height: 100vh;
-        }
-
-        .admin-layout.active {
-            display: flex;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 280px;
-            background: rgba(15, 23, 42, 0.9);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid var(--glass-border);
-            padding: 2rem 1rem;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            transition: transform 0.3s ease;
-            z-index: 100;
-        }
-
-        .sidebar-header {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            padding: 0 1rem 2rem;
-            border-bottom: 1px solid var(--glass-border);
-            margin-bottom: 1.5rem;
-        }
-
-        .sidebar-logo {
-            width: 50px;
-            height: 38px;
-        }
-
-        .sidebar-title {
-            font-size: 1.3rem;
-            font-weight: 800;
-        }
-
-        .sidebar-title span {
-            color: var(--primary-yellow);
-        }
-
-        .nav-menu {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.9rem 1.2rem;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: rgba(255,255,255,0.7);
-            font-weight: 500;
-        }
-
-        .nav-item:hover {
-            background: rgba(255,255,255,0.08);
-            color: white;
-        }
-
-        .nav-item.active {
-            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
-            color: white;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
-        }
-
-        .nav-item i {
-            width: 24px;
-            font-size: 1.1rem;
-        }
-
-        .nav-item.logout {
-            margin-top: 1rem;
-            color: var(--danger);
-        }
-
-        .nav-item.logout:hover {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--danger);
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: 280px;
-            padding: 2rem;
-            min-height: 100vh;
-        }
-
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .page-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-        }
-
-        .page-title i {
-            color: var(--primary-yellow);
-            margin-right: 0.5rem;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            background: linear-gradient(135deg, var(--primary-blue), var(--primary-yellow));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-
-        /* Section */
-        .section {
-            display: none;
-        }
-
-        .section.active {
-            display: block;
-            animation: fadeIn 0.4s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Stats Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 18px;
-            padding: 1.8rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(37, 99, 235, 0.3);
-        }
-
-        .stat-icon {
-            width: 55px;
-            height: 55px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: white;
-            margin-bottom: 1rem;
-        }
-
-        .stat-icon.blue { background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue)); }
-        .stat-icon.yellow { background: linear-gradient(135deg, var(--primary-yellow), #F59E0B); color: var(--dark-blue); }
-        .stat-icon.green { background: linear-gradient(135deg, var(--success), #059669); }
-        .stat-icon.red { background: linear-gradient(135deg, var(--danger), #DC2626); }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 800;
-            margin-bottom: 0.3rem;
-        }
-
-        .stat-label {
-            color: rgba(255,255,255,0.7);
-            font-size: 0.9rem;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 18px;
-            padding: 2rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .card-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-        }
-
-        /* Form Styles */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.6rem;
-            font-weight: 600;
-            color: rgba(255,255,255,0.9);
-        }
-
-        .form-label .required {
-            color: var(--danger);
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 0.9rem 1rem;
-            border: 2px solid var(--glass-border);
-            border-radius: 10px;
-            background: rgba(255,255,255,0.95);
-            font-family: 'Poppins', sans-serif;
-            font-size: 0.95rem;
-            color: #333;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-        }
-
-        select.form-control {
-            cursor: pointer;
-        }
-
-        textarea.form-control {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        /* Rich Text Editor */
-        .editor-container {
-            background: rgba(255,255,255,0.95);
-            border-radius: 12px;
-            overflow: hidden;
-            border: 2px solid var(--glass-border);
-            transition: all 0.3s ease;
-        }
-
-        .editor-container:focus-within {
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-        }
-
-        .editor-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.3rem;
-            padding: 0.8rem;
-            background: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .toolbar-group {
-            display: flex;
-            gap: 0.2rem;
-            padding-right: 0.6rem;
-            margin-right: 0.3rem;
-            border-right: 1px solid #e2e8f0;
-        }
-
-        .toolbar-group:last-child {
-            border-right: none;
-        }
-
-        .toolbar-btn {
-            width: 36px;
-            height: 36px;
-            border: none;
-            background: transparent;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #475569;
-            transition: all 0.2s ease;
-            font-size: 0.9rem;
-        }
-
-        .toolbar-btn:hover {
-            background: #e2e8f0;
-            color: var(--primary-blue);
-        }
-
-        .toolbar-btn.active {
-            background: var(--primary-blue);
-            color: white;
-        }
-
-        .toolbar-select {
-            padding: 0.4rem 0.6rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            background: white;
-            font-family: 'Poppins', sans-serif;
-            font-size: 0.85rem;
-            color: #333;
-            cursor: pointer;
-        }
-
-        .toolbar-select:focus {
-            outline: none;
-            border-color: var(--primary-blue);
-        }
-
-        .toolbar-color {
-            width: 36px;
-            height: 36px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            padding: 0;
-            background: transparent;
-        }
-
-        .editor-content {
-            min-height: 300px;
-            max-height: 500px;
-            overflow-y: auto;
-            padding: 1.2rem;
-            font-size: 1rem;
-            line-height: 1.7;
-            color: #333;
-        }
-
-        .editor-content:focus {
-            outline: none;
-        }
-
-        .editor-content img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            margin: 1rem 0;
-        }
-
-        .word-counter {
-            text-align: right;
-            padding: 0.5rem 1rem;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
-            font-size: 0.85rem;
-            color: #64748b;
-        }
-
-        .word-counter.warning {
-            color: var(--warning);
-            font-weight: 600;
-        }
-
-        .word-counter.danger {
-            color: var(--danger);
-            font-weight: 700;
-        }
-
-        /* Items List */
-        .items-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .item-card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--glass-border);
-            border-radius: 14px;
-            padding: 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            transition: all 0.3s ease;
-            flex-wrap: wrap;
-        }
-
-        .item-card:hover {
-            background: rgba(255,255,255,0.08);
-            border-color: var(--primary-blue);
-        }
-
-        .item-info {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .item-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 0.4rem;
-        }
-
-        .item-meta {
-            color: rgba(255,255,255,0.6);
-            font-size: 0.85rem;
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .item-meta span {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .item-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .btn-icon {
-            width: 40px;
-            height: 40px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            color: white;
-        }
-
-        .btn-icon.edit {
-            background: rgba(37, 99, 235, 0.2);
-            color: var(--primary-blue);
-        }
-
-        .btn-icon.edit:hover {
-            background: var(--primary-blue);
-            color: white;
-        }
-
-        .btn-icon.delete {
-            background: rgba(239, 68, 68, 0.2);
-            color: var(--danger);
-        }
-
-        .btn-icon.delete:hover {
-            background: var(--danger);
-            color: white;
-        }
-
-        .btn-icon.view {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--success);
-        }
-
-        .btn-icon.view:hover {
-            background: var(--success);
-            color: white;
-        }
-
-        /* Badge */
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .badge-blue { background: rgba(37, 99, 235, 0.2); color: #60A5FA; }
-        .badge-yellow { background: rgba(252, 211, 77, 0.2); color: var(--primary-yellow); }
-        .badge-green { background: rgba(16, 185, 129, 0.2); color: #34D399; }
-        .badge-red { background: rgba(239, 68, 68, 0.2); color: #F87171; }
-        .badge-purple { background: rgba(139, 92, 246, 0.2); color: #A78BFA; }
-
-        /* Image Upload */
-        .image-upload {
-            border: 2px dashed var(--glass-border);
-            border-radius: 12px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: rgba(255,255,255,0.03);
-        }
-
-        .image-upload:hover {
-            border-color: var(--primary-blue);
-            background: rgba(37, 99, 235, 0.05);
-        }
-
-        .image-upload i {
-            font-size: 3rem;
-            color: var(--primary-blue);
-            margin-bottom: 1rem;
-        }
-
-        .image-upload p {
-            color: rgba(255,255,255,0.7);
-            margin-bottom: 0.5rem;
-        }
-
-        .image-upload small {
-            color: rgba(255,255,255,0.5);
-            font-size: 0.85rem;
-        }
-
-        .image-preview {
-            margin-top: 1rem;
-            max-width: 300px;
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .image-preview img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        /* Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            overflow-y: auto;
-        }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal {
-            background: linear-gradient(135deg, #1E3A8A, #0F172A);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 2.5rem;
-            max-width: 800px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            width: 40px;
-            height: 40px;
-            border: none;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            color: white;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-        }
-
-        .modal-close:hover {
-            background: var(--danger);
-        }
-
-        .modal-title {
-            font-size: 1.6rem;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-        }
-
-        /* Toast */
-        .toast-container {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-        }
-
-        .toast {
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 1rem 1.5rem;
-            color: white;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            min-width: 300px;
-            animation: slideIn 0.4s ease;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(400px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        .toast.success { border-left: 4px solid var(--success); }
-        .toast.error { border-left: 4px solid var(--danger); }
-        .toast.info { border-left: 4px solid var(--primary-blue); }
-
-        .toast i {
-            font-size: 1.3rem;
-        }
-
-        .toast.success i { color: var(--success); }
-        .toast.error i { color: var(--danger); }
-        .toast.info i { color: var(--primary-blue); }
-
-        /* Loading */
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: rgba(255,255,255,0.6);
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        /* Mobile Menu Toggle */
-        .menu-toggle {
-            display: none;
-            position: fixed;
-            top: 1rem;
-            left: 1rem;
-            z-index: 200;
-            width: 45px;
-            height: 45px;
-            border: none;
-            background: var(--primary-blue);
-            color: white;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.5);
-        }
-
-        /* Responsive */
-        @media (max-width: 968px) {
-            .menu-toggle {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-                padding: 1.5rem;
-                padding-top: 5rem;
-            }
-
-            .top-bar {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .item-card {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .item-actions {
-                width: 100%;
-                justify-content: flex-end;
-            }
-
-            .modal {
-                padding: 1.5rem;
-            }
-        }
-
-        /* Switch Toggle */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 26px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255,255,255,0.2);
-            transition: .4s;
-            border-radius: 26px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--success);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(24px);
-        }
-
-        .switch-label {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07101f">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>LTcine TV — Panel Admin</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --blue:#2f6bff;--blue2:#1d4ed8;--yellow:#f4cf5d;--green:#10b981;--red:#ef4444;
+      --amber:#f59e0b;--bg:#050a15;--bg2:#0a1427;--panel:rgba(12,22,42,.82);
+      --panel2:rgba(255,255,255,.055);--border:rgba(255,255,255,.10);--text:#f8fafc;
+      --muted:rgba(226,232,240,.66);--shadow:0 18px 50px rgba(0,0,0,.28)
+    }
+    html{scroll-behavior:smooth}
+    body{
+      min-height:100vh;font-family:Poppins,sans-serif;color:var(--text);
+      background:
+        radial-gradient(circle at 12% 10%,rgba(47,107,255,.20),transparent 25rem),
+        radial-gradient(circle at 85% 18%,rgba(244,207,93,.08),transparent 23rem),
+        linear-gradient(145deg,#030711,#091426 52%,#040914);
+    }
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    a{color:inherit}
+    .hidden{display:none!important}
+    .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+    /* Login */
+    .login-page{min-height:100vh;display:grid;place-items:center;padding:22px}
+    .login-card{
+      width:min(460px,100%);padding:30px;border-radius:26px;
+      background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.025)),rgba(8,15,30,.86);
+      border:1px solid var(--border);box-shadow:var(--shadow);backdrop-filter:blur(18px)
+    }
+    .brand-row{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+    .brand-logo{
+      width:70px;height:70px;border-radius:18px;overflow:hidden;position:relative;flex:0 0 auto;
+      background:linear-gradient(145deg,#17233a,#0b1324);border:1px solid rgba(140,176,255,.18)
+    }
+    .brand-logo img{position:absolute;left:50%;top:50%;width:155%;height:155%;max-width:none;object-fit:contain;transform:translate(-50%,-50%)}
+    .brand-name{font-size:1.55rem;font-weight:900}.brand-name span{color:var(--yellow)}
+    .brand-sub{font-size:.8rem;color:var(--muted);margin-top:3px}
+    .login-card h1{font-size:1.55rem;margin-bottom:7px}
+    .login-card>p{color:var(--muted);font-size:.92rem;margin-bottom:22px}
+
+    /* Forms */
+    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .form-group{display:grid;gap:7px;margin-bottom:14px}
+    .form-group.full{grid-column:1/-1}
+    label{font-size:.85rem;font-weight:650;color:rgba(255,255,255,.82)}
+    .form-control{
+      width:100%;min-height:46px;padding:11px 13px;border-radius:12px;
+      border:1px solid rgba(255,255,255,.11);outline:none;color:#fff;
+      background:rgba(255,255,255,.055);box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+      transition:border-color .2s,box-shadow .2s
+    }
+    textarea.form-control{min-height:120px;resize:vertical;line-height:1.65}
+    select.form-control{color:#fff}.form-control option{color:#111827}
+    .form-control:focus{border-color:rgba(94,142,255,.55);box-shadow:0 0 0 4px rgba(47,107,255,.09)}
+    .help{font-size:.76rem;color:var(--muted)}
+    .check-row{display:flex;align-items:center;gap:9px;color:rgba(255,255,255,.85);font-size:.9rem}
+    .check-row input{width:18px;height:18px;accent-color:var(--blue)}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+    .btn{
+      min-height:44px;padding:10px 15px;border:0;border-radius:12px;font-weight:750;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.2s
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn-primary{color:#fff;background:linear-gradient(135deg,var(--blue),var(--blue2));box-shadow:0 9px 22px rgba(47,107,255,.18)}
+    .btn-secondary{color:#fff;background:rgba(255,255,255,.07);border:1px solid var(--border)}
+    .btn-danger{color:#fff;background:linear-gradient(135deg,#ef4444,#b91c1c)}
+    .btn-success{color:#fff;background:linear-gradient(135deg,#10b981,#047857)}
+    .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+    /* Layout */
+    .admin-layout{display:none;min-height:100vh}
+    .admin-layout.active{display:block}
+    .sidebar{
+      position:fixed;inset:0 auto 0 0;width:285px;padding:18px 14px;z-index:1000;
+      background:rgba(4,10,20,.94);border-right:1px solid var(--border);
+      backdrop-filter:blur(18px);overflow-y:auto;transition:transform .25s ease
+    }
+    .sidebar-head{display:flex;align-items:center;gap:11px;padding:7px 7px 18px;border-bottom:1px solid var(--border)}
+    .sidebar .brand-logo{width:54px;height:54px;border-radius:15px}
+    .sidebar .brand-name{font-size:1.16rem}
+    .nav{display:grid;gap:6px;margin-top:17px}
+    .nav-btn{
+      width:100%;padding:11px 12px;border:0;border-radius:12px;background:transparent;color:var(--muted);
+      display:flex;align-items:center;gap:11px;text-align:left;font-weight:600
+    }
+    .nav-btn i{width:22px;text-align:center}
+    .nav-btn:hover{background:rgba(255,255,255,.055);color:#fff}
+    .nav-btn.active{color:#fff;background:linear-gradient(135deg,rgba(47,107,255,.88),rgba(29,78,216,.88));box-shadow:0 9px 22px rgba(47,107,255,.16)}
+    .nav-separator{height:1px;background:var(--border);margin:10px 7px}
+    .logout-btn{color:#fca5a5}
+    .main{margin-left:285px;min-height:100vh;padding:22px}
+    .topbar{
+      position:sticky;top:0;z-index:800;margin:-22px -22px 22px;padding:14px 22px;
+      background:rgba(5,10,21,.84);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;gap:12px
+    }
+    .top-left{display:flex;align-items:center;gap:12px}
+    .mobile-menu{display:none;width:42px;height:42px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:#fff}
+    .page-title{font-size:1.35rem;font-weight:850}
+    .userbox{display:flex;align-items:center;gap:10px}
+    .avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--blue),var(--yellow));font-weight:900;color:#08111f}
+    .user-email{font-size:.82rem;color:var(--muted);max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+    /* Sections */
+    .admin-section{display:none}
+    .admin-section.active{display:block}
+    .section-intro{margin-bottom:18px}
+    .section-intro h2{font-size:1.7rem;margin-bottom:5px}
+    .section-intro p{color:var(--muted);font-size:.92rem}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}
+    .stat{
+      padding:18px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.025)),var(--panel);
+      border:1px solid var(--border);box-shadow:var(--shadow)
+    }
+    .stat-icon{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;margin-bottom:12px;background:rgba(47,107,255,.15);color:#8db0ff}
+    .stat-value{font-size:1.75rem;font-weight:900}
+    .stat-label{font-size:.82rem;color:var(--muted)}
+    .grid-2{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:16px}
+    .card{
+      padding:18px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02)),var(--panel);
+      border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:16px
+    }
+    .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+    .card-title{font-size:1.08rem;font-weight:800}
+    .card-sub{color:var(--muted);font-size:.8rem;margin-top:2px}
+    .list{display:grid;gap:10px}
+    .item{
+      display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px;border-radius:14px;
+      background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)
+    }
+    .item-title{font-size:.95rem;font-weight:750;margin-bottom:4px;overflow-wrap:anywhere}
+    .item-meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.76rem}
+    .item-actions{display:flex;gap:7px}
+    .icon-btn{
+      width:36px;height:36px;border:0;border-radius:10px;display:grid;place-items:center;color:#fff;background:rgba(255,255,255,.07)
+    }
+    .icon-btn.edit{color:#9bb8ff}.icon-btn.delete{color:#fca5a5}.icon-btn.view{color:#6ee7b7}
+    .badge{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;font-size:.68rem;font-weight:800;background:rgba(47,107,255,.14);color:#9bb8ff}
+    .badge.off{background:rgba(239,68,68,.12);color:#fca5a5}
+    .empty{padding:26px 10px;text-align:center;color:var(--muted);font-size:.9rem}
+    .search-box{position:relative;min-width:220px}
+    .search-box i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+    .search-box input{padding-left:36px}
+
+    .font-preview {
+      margin-top: 10px; padding: 13px; border-radius: 12px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07);
+      color: rgba(255,255,255,.88); line-height: 1.6;
+    }
+
+    /* Settings */
+    .settings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .setting-card{padding:18px;border-radius:18px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07)}
+    .setting-card h3{font-size:1rem;margin-bottom:12px;color:#fff}
+
+    /* Toast */
+    .toast{
+      position:fixed;right:18px;bottom:18px;z-index:5000;width:min(380px,calc(100vw - 36px));
+      padding:13px 15px;border-radius:13px;background:rgba(5,10,20,.97);border:1px solid var(--border);
+      box-shadow:0 18px 45px rgba(0,0,0,.35);opacity:0;visibility:hidden;transform:translateY(22px);transition:.2s
+    }
+    .toast.show{opacity:1;visibility:visible;transform:translateY(0)}
+    .toast.success{border-left:4px solid var(--green)}.toast.error{border-left:4px solid var(--red)}
+
+    /* Confirm modal */
+    .modal{
+      position:fixed;inset:0;z-index:4500;display:none;place-items:center;padding:20px;
+      background:rgba(2,6,12,.78);backdrop-filter:blur(7px)
+    }
+    .modal.show{display:grid}
+    .modal-card{
+      width:min(470px,100%);padding:20px;border-radius:20px;background:#0b1528;border:1px solid var(--border);box-shadow:var(--shadow)
+    }
+    .modal-card h3{margin-bottom:8px}.modal-card p{color:var(--muted);font-size:.9rem}
+    .modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
+
+    @media(max-width:1100px){
+      .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .grid-2,.settings-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:800px){
+      .sidebar{transform:translateX(-105%)}.sidebar.open{transform:translateX(0)}
+      .main{margin-left:0;padding:14px}.topbar{margin:-14px -14px 16px;padding:12px 14px}
+      .mobile-menu{display:grid;place-items:center}.user-email{display:none}
+      .form-grid{grid-template-columns:1fr}.form-group.full{grid-column:auto}
+      .stats{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:520px){
+      .stats{grid-template-columns:1fr}.item{grid-template-columns:1fr}.item-actions{justify-content:flex-end}
+      .section-intro h2{font-size:1.4rem}.card{padding:14px}.settings-grid{gap:12px}
+    }
+  </style>
 </head>
 <body>
-    <div class="bg-animation"></div>
-    <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Login Page -->
-    <div class="login-page" id="loginPage">
-        <div class="login-card">
-            <svg class="login-logo" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
-                <line x1="60" y1="60" x2="40" y2="25" stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>
-                <circle cx="40" cy="25" r="6" fill="#2563EB"/>
-                <line x1="90" y1="60" x2="110" y2="25" stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>
-                <circle cx="110" cy="25" r="6" fill="#2563EB"/>
-                <path d="M 30 70 Q 30 60 40 60 L 120 60 Q 130 60 130 70 L 130 120 Q 130 130 120 130 L 40 130 Q 30 130 30 120 Z" fill="#2563EB" opacity="0.95"/>
-                <text x="38" y="110" font-family="Poppins" font-weight="900" font-size="45" fill="#2563EB">LT</text>
-                <text x="95" y="110" font-family="Poppins" font-weight="400" font-size="32" fill="#2563EB">cine</text>
-                <rect x="135" y="75" width="55" height="45" rx="10" fill="#2563EB"/>
-                <text x="142" y="107" font-family="Poppins" font-weight="800" font-size="28" fill="#FCD34D">TV</text>
-            </svg>
-            <h1 class="login-title">LTcine <span>TV</span></h1>
-            <p class="login-subtitle">Panel d'Administration</p>
-            
-            <form class="login-form" id="loginForm">
-                <div class="input-group">
-                    <i class="fas fa-envelope"></i>
-                    <input type="email" id="loginEmail" placeholder="Email administrateur" required>
-                </div>
-                <div class="input-group">
-                    <i class="fas fa-lock"></i>
-                    <input type="password" id="loginPassword" placeholder="Mot de passe" required>
-                </div>
-                <button type="submit" class="btn btn-primary" id="loginBtn">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Se connecter
-                </button>
-            </form>
-            
-            <p style="margin-top: 1.5rem; color: rgba(255,255,255,0.5); font-size: 0.85rem;">
-                <i class="fas fa-shield-alt"></i> Accès réservé aux administrateurs
-            </p>
+  <section class="login-page" id="loginPage">
+    <div class="login-card">
+      <div class="brand-row">
+        <div class="brand-logo">
+          <img src="https://i.ibb.co/Q7NBvsD7/LT-20260319-205453-0000.png" alt="Logo LTcine TV">
         </div>
-    </div>
+        <div>
+          <div class="brand-name">LTcine <span>TV</span></div>
+          <div class="brand-sub">Centre de contrôle</div>
+        </div>
+      </div>
+      <h1>Connexion administrateur</h1>
+      <p>Connectez-vous avec votre compte Firebase Auth pour gérer le site.</p>
 
-    <!-- Admin Layout -->
-    <div class="admin-layout" id="adminLayout">
-        <button class="menu-toggle" id="menuToggle">
-            <i class="fas fa-bars"></i>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginEmail">Adresse e-mail</label>
+          <input class="form-control" id="loginEmail" type="email" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Mot de passe</label>
+          <input class="form-control" id="loginPassword" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn btn-primary" id="loginBtn" type="submit" style="width:100%">
+          <i class="fas fa-right-to-bracket"></i> Se connecter
         </button>
+      </form>
+    </div>
+  </section>
 
-        <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <svg class="sidebar-logo" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M 30 70 Q 30 60 40 60 L 120 60 Q 130 60 130 70 L 130 120 Q 130 130 120 130 L 40 130 Q 30 130 30 120 Z" fill="#2563EB"/>
-                    <rect x="135" y="75" width="55" height="45" rx="10" fill="#2563EB"/>
-                    <text x="142" y="107" font-family="Poppins" font-weight="800" font-size="28" fill="#FCD34D">TV</text>
-                </svg>
-                <div class="sidebar-title">LTcine <span>TV</span></div>
+  <div class="admin-layout" id="adminLayout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <div class="brand-logo">
+          <img src="https://i.ibb.co/Q7NBvsD7/LT-20260319-205453-0000.png" alt="LTcine TV">
+        </div>
+        <div>
+          <div class="brand-name">LTcine <span>TV</span></div>
+          <div class="brand-sub">Administration</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-btn active" data-section="dashboard"><i class="fas fa-chart-line"></i> Tableau de bord</button>
+        <button class="nav-btn" data-section="settings"><i class="fas fa-sliders"></i> Informations du site</button>
+        <button class="nav-btn" data-section="categories"><i class="fas fa-tags"></i> Catégories</button>
+        <button class="nav-btn" data-section="news"><i class="fas fa-newspaper"></i> Actualités & Messages</button>
+        <button class="nav-btn" data-section="ticker"><i class="fas fa-bolt"></i> Bandeau d'annonces</button>
+        <button class="nav-btn" data-section="verses"><i class="fas fa-book-bible"></i> Versets</button>
+        <button class="nav-btn" data-section="live"><i class="fas fa-tower-broadcast"></i> Directs</button>
+        <button class="nav-btn" data-section="galleries"><i class="fas fa-images"></i> Prestations & Galeries</button>
+        <button class="nav-btn" data-section="members"><i class="fas fa-user-group"></i> Membres</button>
+        <button class="nav-btn" data-section="subscribers"><i class="fas fa-users"></i> Abonnés</button>
+        <button class="nav-btn" data-section="broadcast"><i class="fas fa-envelope"></i> Diffusion e-mail</button>
+        <div class="nav-separator"></div>
+        <button class="nav-btn logout-btn" id="logoutBtn"><i class="fas fa-right-from-bracket"></i> Déconnexion</button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="top-left">
+          <button class="mobile-menu" id="mobileMenuBtn" aria-label="Ouvrir le menu"><i class="fas fa-bars"></i></button>
+          <div class="page-title" id="pageTitle">Tableau de bord</div>
+        </div>
+        <div class="userbox">
+          <div class="user-email" id="userEmail"></div>
+          <div class="avatar" id="userAvatar">A</div>
+        </div>
+      </header>
+
+      <!-- Dashboard -->
+      <section class="admin-section active" id="section-dashboard">
+        <div class="section-intro">
+          <h2>Vue d'ensemble</h2>
+          <p>Le contenu de LTcine TV en un coup d'œil.</p>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="stat-icon"><i class="fas fa-newspaper"></i></div><div class="stat-value" id="statNews">—</div><div class="stat-label">Actualités / messages</div></div>
+          <div class="stat"><div class="stat-icon"><i class="fas fa-tags"></i></div><div class="stat-value" id="statCategories">—</div><div class="stat-label">Catégories actives</div></div>
+          <div class="stat"><div class="stat-icon"><i class="fas fa-images"></i></div><div class="stat-value" id="statGalleries">—</div><div class="stat-label">Galeries / prestations</div></div>
+          <div class="stat"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value" id="statSubscribers">—</div><div class="stat-label">Membres / abonnés</div></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div><div class="card-title">Actions rapides</div><div class="card-sub">Accédez directement aux tâches fréquentes.</div></div></div>
+            <div class="actions">
+              <button class="btn btn-primary quick-nav" data-go="news"><i class="fas fa-plus"></i> Publier un contenu</button>
+              <button class="btn btn-secondary quick-nav" data-go="ticker"><i class="fas fa-bolt"></i> Nouvelle annonce</button>
+              <button class="btn btn-secondary quick-nav" data-go="galleries"><i class="fas fa-images"></i> Ajouter une galerie</button>
+              <button class="btn btn-secondary quick-nav" data-go="settings"><i class="fas fa-sliders"></i> Modifier le site</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><div class="card-title">État Firebase</div><div class="card-sub">Connexion et session administrateur.</div></div></div>
+            <div class="item">
+              <div>
+                <div class="item-title">Firebase Auth + Firestore</div>
+                <div class="item-meta"><span><i class="fas fa-circle-check"></i> Session authentifiée</span></div>
+              </div>
+              <span class="badge">Connecté</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section class="admin-section" id="section-settings">
+        <div class="section-intro">
+          <h2>Informations du site</h2>
+          <p>Modifiez les textes, coordonnées, réseaux sociaux et éléments d'identité visibles sur le site public.</p>
+        </div>
+        <form id="settingsForm">
+          <div class="settings-grid">
+            <div class="setting-card">
+              <h3><i class="fas fa-signature"></i> Identité</h3>
+              <div class="form-group"><label>Nom du site</label><input class="form-control" id="setSiteName" maxlength="80"></div>
+              <div class="form-group"><label>Sous-titre du header</label><input class="form-control" id="setTagline" maxlength="160"></div>
+              <div class="form-group"><label>URL du logo</label><input class="form-control" id="setLogoUrl" type="url" maxlength="1000"></div>
             </div>
 
-            <ul class="nav-menu">
-                <li class="nav-item active" data-section="dashboard">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span>Tableau de bord</span>
-                </li>
-                <li class="nav-item" data-section="ticker">
-                    <i class="fas fa-bolt"></i>
-                    <span>Bande roulante</span>
-                </li>
-                <li class="nav-item" data-section="verses">
-                    <i class="fas fa-book-bible"></i>
-                    <span>Verset du jour</span>
-                </li>
-                <li class="nav-item" data-section="news">
-                    <i class="fas fa-newspaper"></i>
-                    <span>Actualités</span>
-                </li>
-                <li class="nav-item" data-section="live">
-                    <i class="fas fa-broadcast-tower"></i>
-                    <span>Directs</span>
-                </li>
-                <li class="nav-item" data-section="downloads">
-                    <i class="fas fa-download"></i>
-                    <span>Fichiers</span>
-                </li>
-                <li class="nav-item" data-section="subscribers">
-                    <i class="fas fa-users"></i>
-                    <span>Abonnés</span>
-                </li>
-                <li class="nav-item logout" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Déconnexion</span>
-                </li>
-            </ul>
-        </aside>
+            <div class="setting-card">
+              <h3><i class="fas fa-font"></i> Typographie du site</h3>
+              <div class="form-group">
+                <label>Police générale</label>
+                <select class="form-control" id="setBodyFont">
+                  <option>Poppins</option><option>Inter</option><option>Roboto</option><option>Open Sans</option>
+                  <option>Montserrat</option><option>Lato</option><option>Nunito</option><option>Source Sans 3</option>
+                </select>
+                <div class="help">Polices lisibles et professionnelles pour les paragraphes et interfaces.</div>
+              </div>
+              <div class="form-group">
+                <label>Police des titres</label>
+                <select class="form-control" id="setHeadingFont">
+                  <option>Poppins</option><option>Inter</option><option>Roboto</option><option>Open Sans</option>
+                  <option>Montserrat</option><option>Lato</option><option>Nunito</option><option>Source Sans 3</option>
+                </select>
+              </div>
+              <div class="font-preview" id="fontPreview">LTcine TV — Une communication claire au service de l'édification.</div>
+            </div>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Dashboard Section -->
-            <section class="section active" id="section-dashboard">
-                <div class="top-bar">
-                    <h1 class="page-title"><i class="fas fa-tachometer-alt"></i> Tableau de bord</h1>
-                    <div class="user-info">
-                        <div class="user-avatar" id="userAvatar">A</div>
-                        <div>
-                            <div style="font-weight: 600;" id="userName">Admin</div>
-                            <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6);" id="userEmail">admin@ltcine.com</div>
-                        </div>
-                    </div>
-                </div>
+            <div class="setting-card">
+              <h3><i class="fas fa-house"></i> Accueil</h3>
+              <div class="form-group"><label>Titre principal</label><input class="form-control" id="setHeroTitle" maxlength="180"></div>
+              <div class="form-group"><label>Texte d'introduction</label><textarea class="form-control" id="setHeroText" maxlength="900"></textarea></div>
+              <div class="form-group"><label>Texte de recherche</label><input class="form-control" id="setSearchPlaceholder" maxlength="140"></div>
+            </div>
+            <div class="setting-card">
+              <h3><i class="fas fa-circle-info"></i> À propos</h3>
+              <div class="form-group"><label>Titre</label><input class="form-control" id="setAboutTitle" maxlength="180"></div>
+              <div class="form-group"><label>Paragraphe 1</label><textarea class="form-control" id="setAboutText1" maxlength="1800"></textarea></div>
+              <div class="form-group"><label>Paragraphe 2</label><textarea class="form-control" id="setAboutText2" maxlength="1800"></textarea></div>
+            </div>
+            <div class="setting-card">
+              <h3><i class="fas fa-address-book"></i> Contact</h3>
+              <div class="form-group"><label>WhatsApp</label><input class="form-control" id="setWhatsapp" maxlength="30" placeholder="+226 73 66 91 04"></div>
+              <div class="form-group"><label>E-mail</label><input class="form-control" id="setEmail" type="email" maxlength="120"></div>
+              <div class="form-group"><label>Localisation</label><input class="form-control" id="setLocation" maxlength="120"></div>
+            </div>
+            <div class="setting-card">
+              <h3><i class="fas fa-share-nodes"></i> Réseaux sociaux</h3>
+              <div class="form-group"><label>Facebook</label><input class="form-control" id="setFacebook" type="url" maxlength="1000"></div>
+              <div class="form-group"><label>YouTube</label><input class="form-control" id="setYoutube" type="url" maxlength="1000"></div>
+              <div class="form-group"><label>TikTok</label><input class="form-control" id="setTiktok" type="url" maxlength="1000"></div>
+            </div>
+            <div class="setting-card">
+              <h3><i class="fas fa-images"></i> Prestations & galeries</h3>
+              <div class="form-group"><label>Titre d'introduction</label><input class="form-control" id="setGalleryTitle" maxlength="180"></div>
+              <div class="form-group"><label>Texte d'introduction</label><textarea class="form-control" id="setGalleryText" maxlength="900"></textarea></div>
+              <div class="form-group"><label>Vitesse du bandeau (secondes)</label><input class="form-control" id="setTickerSpeed" type="number" min="8" max="80"></div>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" type="submit" id="saveSettingsBtn"><i class="fas fa-floppy-disk"></i> Enregistrer les informations du site</button>
+          </div>
+        </form>
+      </section>
 
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon blue">
-                            <i class="fas fa-newspaper"></i>
-                        </div>
-                        <div class="stat-value" id="statNews">0</div>
-                        <div class="stat-label">Actualités</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon yellow">
-                            <i class="fas fa-bolt"></i>
-                        </div>
-                        <div class="stat-value" id="statTicker">0</div>
-                        <div class="stat-label">Infos roulantes</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon green">
-                            <i class="fas fa-broadcast-tower"></i>
-                        </div>
-                        <div class="stat-value" id="statLive">0</div>
-                        <div class="stat-label">Directs actifs</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon red">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div class="stat-value" id="statSubscribers">0</div>
-                        <div class="stat-label">Abonnés</div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-info-circle" style="color: var(--primary-yellow);"></i> Bienvenue sur le Panel Admin</h3>
-                    </div>
-                    <p style="color: rgba(255,255,255,0.8); line-height: 1.8;">
-                        Gérez facilement tout le contenu de votre site LTcine TV. Vous pouvez ajouter des actualités avec un éditeur de texte riche, gérer les directs YouTube/Facebook, uploader des fichiers téléchargeables, et bien plus encore.
-                    </p>
-                    <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <button class="btn btn-primary" onclick="navigateTo('news')">
-                            <i class="fas fa-plus"></i> Nouvelle actualité
-                        </button>
-                        <button class="btn btn-success" onclick="navigateTo('live')">
-                            <i class="fas fa-broadcast-tower"></i> Nouveau direct
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Ticker Section -->
-            <section class="section" id="section-ticker">
-                <div class="top-bar">
-                    <h1 class="page-title"><i class="fas fa-bolt"></i> Bande Roulante</h1>
-                    <button class="btn btn-primary" onclick="openTickerModal()">
-                        <i class="fas fa-plus"></i> Ajouter
-                    </button>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Informations défilantes</h3>
-                    </div>
-                    <div class="items-list" id="tickerList">
-                        <div class="loading-spinner"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Verses Section -->
-            <section class="section" id="section-verses">
-                <div class="top-bar">
-                    <h1 class="page-title"><i class="fas fa-book-bible"></i> Verset du Jour</h1>
-                    <button class="btn btn-primary" onclick="openVerseModal()">
-                        <i class="fas fa-plus"></i> Ajouter un verset
-                    </button>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Liste des versets</h3>
-                    </div>
-                    <div class="items-list" id="versesList">
-                        <div class="loading-spinner"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- News Section -->
-            <section class="section" id="section-news">
-                <div class="top-bar">
-                    <h1 class="page-title"><i class="fas fa-newspaper"></i> Actualités</h1>
-                    <button class="btn btn-primary" onclick="openNewsModal()">
-                        <i class="fas fa-plus"></i> Nouvelle actualité
-                    </button>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Toutes les actualités</h3>
-                    </div>
-                    <div class="items-list" id="newsList">
-                        <div class="loading-spinner"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Live Section -->
-            <section class="section" id="section-live">
-                <div class="top-bar">
-                    <h1 class="page-title"><i class="fas fa-broadcast-tower"></i> Directs</h1>
-                    <button class="btn btn-primary" onclick="openLiveModal()">
-                        <i class="fas fa-plus"></i> Nouveau direct
-                    </button>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Directs en cours et passés</h3>
-                    </div>
-                    <div class="items-list" id="liveList">
-                        <div class="loading-spinner"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Downloads Section -->
-            <section class="section" id="section-downloads">
-                <div class="top-bar">
-                    <h1 class="page-title"><i class="fas fa-download"></i> Fichiers Téléchargeables</h1>
-                    <button class="btn btn-primary" onclick="openDownloadModal()">
-                        <i class="fas fa-plus"></i> Ajouter un fichier
-                    </button>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Fichiers disponibles</h3>
-                    </div>
-                    <div class="items-list" id="downloadsList">
-                        <div class="loading-spinner"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Subscribers Section -->
-            <section class="section" id="section-subscribers">
-                <div class="top-bar">
-                    <h1 class="page-title"><i class="fas fa-users"></i> Abonnés</h1>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Liste des abonnés Gmail</h3>
-                    </div>
-                    <div class="items-list" id="subscribersList">
-                        <div class="loading-spinner"></div>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- Ticker Modal -->
-    <div class="modal-overlay" id="tickerModal">
-        <div class="modal">
-            <button class="modal-close" onclick="closeModal('tickerModal')">
-                <i class="fas fa-times"></i>
-            </button>
-            <h2 class="modal-title" id="tickerModalTitle">Ajouter une info roulante</h2>
-            <form id="tickerForm">
-                <input type="hidden" id="tickerId">
-                <div class="form-group">
-                    <label class="form-label">Texte de l'information <span class="required">*</span></label>
-                    <textarea class="form-control" id="tickerText" rows="3" required></textarea>
-                </div>
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('tickerModal')">Annuler</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Enregistrer
-                    </button>
-                </div>
-            </form>
+      <!-- Categories -->
+      <section class="admin-section" id="section-categories">
+        <div class="section-intro">
+          <h2>Catégories</h2>
+          <p>Ajoutez, renommez, réorganisez ou désactivez les catégories proposées dans le menu public.</p>
         </div>
-    </div>
-
-    <!-- Verse Modal -->
-    <div class="modal-overlay" id="verseModal">
-        <div class="modal">
-            <button class="modal-close" onclick="closeModal('verseModal')">
-                <i class="fas fa-times"></i>
-            </button>
-            <h2 class="modal-title" id="verseModalTitle">Ajouter un verset</h2>
-            <form id="verseForm">
-                <input type="hidden" id="verseId">
-                <div class="form-group">
-                    <label class="form-label">Date du verset <span class="required">*</span></label>
-                    <input type="date" class="form-control" id="verseDate" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Texte du verset <span class="required">*</span></label>
-                    <textarea class="form-control" id="verseText" rows="5" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Référence (ex: Jean 3:16) <span class="required">*</span></label>
-                    <input type="text" class="form-control" id="verseReference" placeholder="Jean 3:16" required>
-                </div>
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('verseModal')">Annuler</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Enregistrer
-                    </button>
-                </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div><div class="card-title" id="categoryFormTitle">Nouvelle catégorie</div><div class="card-sub">Le slug sert de clé technique et reste stable après création.</div></div></div>
+            <form id="categoryForm">
+              <input type="hidden" id="categoryEditingId">
+              <div class="form-group"><label>Nom affiché *</label><input class="form-control" id="categoryLabel" required maxlength="80"></div>
+              <div class="form-group"><label>Slug *</label><input class="form-control" id="categorySlug" required maxlength="80" placeholder="ex: message"></div>
+              <div class="form-grid">
+                <div class="form-group"><label>Icône Font Awesome</label><input class="form-control" id="categoryIcon" maxlength="80" placeholder="fa-message"></div>
+                <div class="form-group"><label>Ordre</label><input class="form-control" id="categoryOrder" type="number" min="0" max="999" value="10"></div>
+              </div>
+              <label class="check-row"><input type="checkbox" id="categoryActive" checked> Catégorie active</label>
+              <div class="actions">
+                <button class="btn btn-primary" type="submit"><i class="fas fa-floppy-disk"></i> Enregistrer</button>
+                <button class="btn btn-secondary hidden" type="button" id="categoryCancel"><i class="fas fa-xmark"></i> Annuler</button>
+              </div>
             </form>
+          </div>
+          <div class="card">
+            <div class="card-head"><div><div class="card-title">Catégories existantes</div><div class="card-sub">Les catégories inactives restent dans Firestore mais ne s'affichent plus publiquement.</div></div></div>
+            <div class="list" id="categoriesList"><div class="empty">Chargement…</div></div>
+          </div>
         </div>
-    </div>
+      </section>
 
-    <!-- News Modal -->
-    <div class="modal-overlay" id="newsModal">
-        <div class="modal" style="max-width: 950px;">
-            <button class="modal-close" onclick="closeModal('newsModal')">
-                <i class="fas fa-times"></i>
-            </button>
-            <h2 class="modal-title" id="newsModalTitle">Nouvelle actualité</h2>
+      <!-- News -->
+      <section class="admin-section" id="section-news">
+        <div class="section-intro">
+          <h2>Actualités & Messages</h2>
+          <p>Publiez tous les contenus éditoriaux, y compris la catégorie Message.</p>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><div><div class="card-title" id="newsFormTitle">Nouveau contenu</div></div></div>
             <form id="newsForm">
-                <input type="hidden" id="newsId">
-                <div class="form-group">
-                    <label class="form-label">Titre <span class="required">*</span></label>
-                    <input type="text" class="form-control" id="newsTitle" required>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label class="form-label">Catégorie <span class="required">*</span></label>
-                        <select class="form-control" id="newsCategory" required>
-                            <option value="actualites"> Actualités</option>
-                            <option value="reportages">🎥 Reportages</option>
-                            <option value="publicites">📢 Publicités</option>
-                            <option value="debats">💬 Débats</option>
-                            <option value="micro-trottoirs">🎤 Micro-trottoirs</option>
-                            <option value="evangelisation">✝️ Évangélisation</option>
-                            <option value="mariage">💒 Mariage</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Image de couverture</label>
-                        <div class="image-upload" onclick="document.getElementById('newsImageInput').click()">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <p>Cliquez pour uploader une image</p>
-                            <small>JPG, PNG (max 5MB)</small>
-                            <input type="file" id="newsImageInput" accept="image/*" style="display: none;" onchange="handleImageUpload(event, 'newsImagePreview', 'newsImageUrl')">
-                        </div>
-                        <div class="image-preview" id="newsImagePreview"></div>
-                        <input type="hidden" id="newsImageUrl">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Extrait / Résumé (affiché sur la carte) <span class="required">*</span></label>
-                    <textarea class="form-control" id="newsExcerpt" rows="3" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Contenu complet (jusqu'à 2000 mots) <span class="required">*</span></label>
-                    <div class="editor-container">
-                        <div class="editor-toolbar">
-                            <div class="toolbar-group">
-                                <select class="toolbar-select" onchange="execCmd('fontName', this.value)" title="Police">
-                                    <option value="Poppins">Poppins</option>
-                                    <option value="Playfair Display">Playfair Display</option>
-                                    <option value="Roboto">Roboto</option>
-                                    <option value="Open Sans">Open Sans</option>
-                                    <option value="Montserrat">Montserrat</option>
-                                    <option value="Arial">Arial</option>
-                                    <option value="Georgia">Georgia</option>
-                                    <option value="Times New Roman">Times New Roman</option>
-                                    <option value="Courier New">Courier New</option>
-                                    <option value="Verdana">Verdana</option>
-                                </select>
-                                <select class="toolbar-select" onchange="execCmd('fontSize', this.value)" title="Taille">
-                                    <option value="1">Très petit</option>
-                                    <option value="2">Petit</option>
-                                    <option value="3" selected>Normal</option>
-                                    <option value="4">Moyen</option>
-                                    <option value="5">Grand</option>
-                                    <option value="6">Très grand</option>
-                                    <option value="7">Énorme</option>
-                                </select>
-                            </div>
-                            <div class="toolbar-group">
-                                <button type="button" class="toolbar-btn" onclick="execCmd('bold')" title="Gras">
-                                    <i class="fas fa-bold"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="execCmd('italic')" title="Italique">
-                                    <i class="fas fa-italic"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="execCmd('underline')" title="Souligné">
-                                    <i class="fas fa-underline"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="execCmd('strikeThrough')" title="Barré">
-                                    <i class="fas fa-strikethrough"></i>
-                                </button>
-                            </div>
-                            <div class="toolbar-group">
-                                <input type="color" class="toolbar-color" onchange="execCmd('foreColor', this.value)" title="Couleur du texte">
-                                <input type="color" class="toolbar-color" onchange="execCmd('hiliteColor', this.value)" title="Couleur de fond" value="#FFFF00">
-                            </div>
-                            <div class="toolbar-group">
-                                <button type="button" class="toolbar-btn" onclick="execCmd('justifyLeft')" title="Aligner à gauche">
-                                    <i class="fas fa-align-left"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="execCmd('justifyCenter')" title="Centrer">
-                                    <i class="fas fa-align-center"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="execCmd('justifyRight')" title="Aligner à droite">
-                                    <i class="fas fa-align-right"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="execCmd('justifyFull')" title="Justifier">
-                                    <i class="fas fa-align-justify"></i>
-                                </button>
-                            </div>
-                            <div class="toolbar-group">
-                                <button type="button" class="toolbar-btn" onclick="execCmd('insertUnorderedList')" title="Liste à puces">
-                                    <i class="fas fa-list-ul"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="execCmd('insertOrderedList')" title="Liste numérotée">
-                                    <i class="fas fa-list-ol"></i>
-                                </button>
-                            </div>
-                            <div class="toolbar-group">
-                                <button type="button" class="toolbar-btn" onclick="insertLink()" title="Insérer un lien">
-                                    <i class="fas fa-link"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="document.getElementById('editorImageInput').click()" title="Insérer une image">
-                                    <i class="fas fa-image"></i>
-                                </button>
-                                <input type="file" id="editorImageInput" accept="image/*" style="display: none;" onchange="insertEditorImage(event)">
-                            </div>
-                            <div class="toolbar-group">
-                                <button type="button" class="toolbar-btn" onclick="execCmd('undo')" title="Annuler">
-                                    <i class="fas fa-undo"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="execCmd('redo')" title="Refaire">
-                                    <i class="fas fa-redo"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" onclick="execCmd('removeFormat')" title="Effacer le formatage">
-                                    <i class="fas fa-eraser"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="editor-content" id="newsContent" contenteditable="true"></div>
-                        <div class="word-counter" id="wordCounter">0 / 2000 mots</div>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('newsModal')">Annuler</button>
-                    <button type="submit" class="btn btn-primary" id="newsSubmitBtn">
-                        <i class="fas fa-save"></i> Enregistrer
-                    </button>
-                </div>
+              <input type="hidden" id="newsEditingId">
+              <div class="form-group"><label>Titre *</label><input class="form-control" id="newsTitle" required maxlength="220"></div>
+              <div class="form-group"><label>Catégorie *</label><select class="form-control" id="newsCategory" required></select></div>
+              <div class="form-group"><label>Résumé</label><textarea class="form-control" id="newsExcerpt" maxlength="600"></textarea></div>
+              <div class="form-group"><label>Contenu *</label><textarea class="form-control" id="newsContent" required maxlength="12000" style="min-height:220px"></textarea></div>
+              <div class="form-group"><label>URL d'une image</label><input class="form-control" id="newsImageUrl" type="url" maxlength="1000"><div class="help">Utilisez votre hébergeur d'images externe si nécessaire.</div></div>
+              <div class="actions">
+                <button class="btn btn-primary" type="submit"><i class="fas fa-paper-plane"></i> Publier / enregistrer</button>
+                <button class="btn btn-secondary hidden" type="button" id="newsCancel">Annuler</button>
+              </div>
             </form>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <div><div class="card-title">Contenus publiés</div></div>
+              <div class="search-box"><i class="fas fa-search"></i><input class="form-control" id="newsSearch" placeholder="Rechercher…"></div>
+            </div>
+            <div class="list" id="newsList"><div class="empty">Chargement…</div></div>
+          </div>
         </div>
-    </div>
+      </section>
 
-    <!-- Live Modal -->
-    <div class="modal-overlay" id="liveModal">
-        <div class="modal">
-            <button class="modal-close" onclick="closeModal('liveModal')">
-                <i class="fas fa-times"></i>
-            </button>
-            <h2 class="modal-title" id="liveModalTitle">Nouveau direct</h2>
-            <form id="liveForm">
-                <input type="hidden" id="liveId">
-                <div class="form-group">
-                    <label class="form-label">Titre du direct <span class="required">*</span></label>
-                    <input type="text" class="form-control" id="liveTitle" required>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group">
-                        <label class="form-label">Plateforme <span class="required">*</span></label>
-                        <select class="form-control" id="livePlatform" required>
-                            <option value="youtube">YouTube</option>
-                            <option value="facebook">Facebook</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Lien du direct <span class="required">*</span></label>
-                        <input type="url" class="form-control" id="liveLink" placeholder="https://..." required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="switch-label">
-                        <label class="switch">
-                            <input type="checkbox" id="liveActive" checked>
-                            <span class="slider"></span>
-                        </label>
-                        <span>Direct actif (visible sur le site)</span>
-                    </label>
-                </div>
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('liveModal')">Annuler</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Enregistrer
-                    </button>
-                </div>
+      <!-- Ticker -->
+      <section class="admin-section" id="section-ticker">
+        <div class="section-intro"><h2>Bandeau d'annonces</h2><p>Gérez les messages défilants en haut du site.</p></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title" id="tickerFormTitle">Nouvelle annonce</div>
+            <form id="tickerForm" style="margin-top:14px">
+              <input type="hidden" id="tickerEditingId">
+              <div class="form-group"><label>Texte *</label><textarea class="form-control" id="tickerText" required maxlength="240"></textarea></div>
+              <div class="actions">
+                <button class="btn btn-primary" type="submit">Enregistrer</button>
+                <button class="btn btn-secondary hidden" type="button" id="tickerCancel">Annuler</button>
+              </div>
             </form>
+          </div>
+          <div class="card"><div class="card-title" style="margin-bottom:14px">Annonces</div><div class="list" id="tickerList"></div></div>
         </div>
-    </div>
+      </section>
 
-    <!-- Download Modal -->
-    <div class="modal-overlay" id="downloadModal">
-        <div class="modal">
-            <button class="modal-close" onclick="closeModal('downloadModal')">
-                <i class="fas fa-times"></i>
-            </button>
-            <h2 class="modal-title" id="downloadModalTitle">Ajouter un fichier</h2>
-            <form id="downloadForm">
-                <input type="hidden" id="downloadId">
-                <div class="form-group">
-                    <label class="form-label">Nom du fichier <span class="required">*</span></label>
-                    <input type="text" class="form-control" id="downloadTitle" placeholder="Ex: Rapport annuel 2026" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Description <span class="required">*</span></label>
-                    <textarea class="form-control" id="downloadDescription" rows="3" placeholder="Décrivez le contenu du fichier..." required></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Type de fichier</label>
-                    <select class="form-control" id="downloadType">
-                        <option value="pdf">📄 PDF</option>
-                        <option value="doc">📝 Document Word</option>
-                        <option value="xls">📊 Excel</option>
-                        <option value="zip">📦 Archive ZIP</option>
-                        <option value="image">🖼️ Image</option>
-                        <option value="video">🎥 Vidéo</option>
-                        <option value="other">📁 Autre</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Lien Google Drive <span class="required">*</span></label>
-                    <input type="url" class="form-control" id="downloadLink" placeholder="https://drive.google.com/..." required>
-                    <small style="color: rgba(255,255,255,0.6); margin-top: 0.3rem; display: block;">
-                        <i class="fas fa-info-circle"></i> Assurez-vous que le fichier est en accès public sur Google Drive
-                    </small>
-                </div>
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('downloadModal')">Annuler</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Enregistrer
-                    </button>
-                </div>
+      <!-- Verses -->
+      <section class="admin-section" id="section-verses">
+        <div class="section-intro"><h2>Versets</h2><p>Programmez le verset du jour par date.</p></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title" id="verseFormTitle">Nouveau verset</div>
+            <form id="verseForm" style="margin-top:14px">
+              <input type="hidden" id="verseEditingId">
+              <div class="form-group"><label>Date *</label><input class="form-control" id="verseDate" type="date" required></div>
+              <div class="form-group"><label>Référence *</label><input class="form-control" id="verseReference" required maxlength="100" placeholder="Jean 3:16"></div>
+              <div class="form-group"><label>Texte *</label><textarea class="form-control" id="verseText" required maxlength="2500"></textarea></div>
+              <div class="actions"><button class="btn btn-primary" type="submit">Enregistrer</button><button class="btn btn-secondary hidden" type="button" id="verseCancel">Annuler</button></div>
             </form>
+          </div>
+          <div class="card"><div class="card-title" style="margin-bottom:14px">Versets enregistrés</div><div class="list" id="versesList"></div></div>
         </div>
+      </section>
+
+      <!-- Live -->
+      <section class="admin-section" id="section-live">
+        <div class="section-intro"><h2>Directs</h2><p>Activez ou désactivez les directs YouTube et Facebook.</p></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title" id="liveFormTitle">Nouveau direct</div>
+            <form id="liveForm" style="margin-top:14px">
+              <input type="hidden" id="liveEditingId">
+              <div class="form-group"><label>Titre *</label><input class="form-control" id="liveTitle" required maxlength="220"></div>
+              <div class="form-group"><label>Plateforme *</label><select class="form-control" id="livePlatform"><option value="youtube">YouTube</option><option value="facebook">Facebook</option></select></div>
+              <div class="form-group"><label>Lien *</label><input class="form-control" id="liveLink" type="url" required maxlength="1000"></div>
+              <label class="check-row"><input type="checkbox" id="liveActive" checked> Direct actif</label>
+              <div class="actions"><button class="btn btn-primary" type="submit">Enregistrer</button><button class="btn btn-secondary hidden" type="button" id="liveCancel">Annuler</button></div>
+            </form>
+          </div>
+          <div class="card"><div class="card-title" style="margin-bottom:14px">Directs enregistrés</div><div class="list" id="liveList"></div></div>
+        </div>
+      </section>
+
+      <!-- Galleries -->
+      <section class="admin-section" id="section-galleries">
+        <div class="section-intro"><h2>Prestations & Galeries</h2><p>Créez un accès aux photos, vidéos ou reportages d'un événement. Cette section continue d'utiliser votre collection <code>downloads</code> pour rester compatible.</p></div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title" id="galleryFormTitle">Nouvelle prestation / galerie</div>
+            <form id="galleryForm" style="margin-top:14px">
+              <input type="hidden" id="galleryEditingId">
+              <div class="form-group"><label>Titre *</label><input class="form-control" id="galleryTitle" required maxlength="220" placeholder="Ex: Camp JAC 2026 — Koudougou"></div>
+              <div class="form-group"><label>Description *</label><textarea class="form-control" id="galleryDescription" required maxlength="1000"></textarea></div>
+              <div class="form-group"><label>Lien de la galerie *</label><input class="form-control" id="galleryLink" type="url" required maxlength="1000"><div class="help">Google Drive, Google Photos, Dropbox, galerie privée, etc.</div></div>
+              <div class="actions"><button class="btn btn-primary" type="submit">Enregistrer</button><button class="btn btn-secondary hidden" type="button" id="galleryCancel">Annuler</button></div>
+            </form>
+          </div>
+          <div class="card"><div class="card-title" style="margin-bottom:14px">Galeries publiées</div><div class="list" id="galleriesList"></div></div>
+        </div>
+      </section>
+
+
+      <!-- Members -->
+      <section class="admin-section" id="section-members">
+        <div class="section-intro">
+          <h2>Membres</h2>
+          <p>Profils créés par Google ou par formulaire. Les informations personnelles restent réservées à l'administration.</p>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <div><div class="card-title">Comptes membres</div><div class="card-sub">Prénom, nom, âge, ville, e-mail et préférence de communication.</div></div>
+          </div>
+          <div class="list" id="membersList"></div>
+        </div>
+      </section>
+
+      <!-- Broadcast -->
+      <section class="admin-section" id="section-broadcast">
+        <div class="section-intro">
+          <h2>Diffusion e-mail</h2>
+          <p>Préparez un message destiné aux membres et abonnés ayant accepté de recevoir les communications de LTcine TV.</p>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Nouveau message collectif</div>
+            <form id="broadcastForm" style="margin-top:14px">
+              <div class="form-group">
+                <label>Destinataires</label>
+                <select class="form-control" id="broadcastAudience">
+                  <option value="all">Tous les inscrits ayant accepté les e-mails</option>
+                  <option value="members">Membres uniquement</option>
+                  <option value="subscribers">Abonnés historiques uniquement</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Objet *</label><input class="form-control" id="broadcastSubject" maxlength="180" required></div>
+              <div class="form-group"><label>Message *</label><textarea class="form-control" id="broadcastMessage" maxlength="7000" style="min-height:220px" required></textarea></div>
+              <div class="help">Le panel crée des documents dans la collection <code>mail</code>. Pour l'envoi réel, installez l'extension Firebase Trigger Email et configurez-la sur cette collection.</div>
+              <div class="actions">
+                <button class="btn btn-primary" id="broadcastBtn" type="submit"><i class="fas fa-paper-plane"></i> Envoyer à la liste</button>
+              </div>
+            </form>
+          </div>
+          <div class="card">
+            <div class="card-title">Aperçu de l'audience</div>
+            <div class="stats" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:14px">
+              <div class="stat"><div class="stat-value" id="broadcastMembersCount">0</div><div class="stat-label">Membres opt-in</div></div>
+              <div class="stat"><div class="stat-value" id="broadcastSubscribersCount">0</div><div class="stat-label">Abonnés actifs</div></div>
+            </div>
+            <div class="item">
+              <div>
+                <div class="item-title">Protection anti-abus</div>
+                <div class="item-meta"><span>Seuls les comptes présents dans <code>admins/{UID}</code> peuvent écrire dans <code>mail</code>.</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Subscribers -->
+      <section class="admin-section" id="section-subscribers">
+        <div class="section-intro"><h2>Abonnés</h2><p>Consultez les personnes inscrites aux notifications.</p></div>
+        <div class="card">
+          <div class="card-head"><div><div class="card-title">Liste des abonnés</div><div class="card-sub">Lecture uniquement depuis ce panel.</div></div></div>
+          <div class="list" id="subscribersList"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="confirmModal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h3>Confirmer la suppression</h3>
+      <p id="confirmText">Voulez-vous vraiment supprimer cet élément ?</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="confirmCancel">Annuler</button>
+        <button class="btn btn-danger" id="confirmDelete">Supprimer</button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCcM46qQo3bTCFo_hmwoYLvOKWVhqLJdnQ",
-            authDomain: "ltcine.firebaseapp.com",
-            projectId: "ltcine",
-            storageBucket: "ltcine.firebasestorage.app",
-            messagingSenderId: "432697683333",
-            appId: "1:432697683333:web:c9069d1e82827c608168ec",
-            measurementId: "G-E33CXDWHNF"
-        };
+  <div class="toast" id="toast"></div>
 
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        const storage = firebase.storage();
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-        // Admin email (à personnaliser)
-        const ADMIN_EMAIL = "admin@ltcine.com";
+  <script>
+    'use strict';
 
-        // Toast System
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            
-            const icons = {
-                success: 'fa-check-circle',
-                error: 'fa-exclamation-circle',
-                info: 'fa-info-circle'
-            };
-            
-            toast.innerHTML = `
-                <i class="fas ${icons[type]}"></i>
-                <span>${message}</span>
-            `;
-            
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.animation = 'slideIn 0.4s ease reverse';
-                setTimeout(() => toast.remove(), 400);
-            }, 3500);
+    // Configuration Firebase conservée à l'identique
+    const firebaseConfig = {
+      apiKey: "AIzaSyCcM46qQo3bTCFo_hmwoYLvOKWVhqLJdnQ",
+      authDomain: "ltcine.firebaseapp.com",
+      projectId: "ltcine",
+      storageBucket: "ltcine.firebasestorage.app",
+      messagingSenderId: "432697683333",
+      appId: "1:432697683333:web:c9069d1e82827c608168ec",
+      measurementId: "G-E33CXDWHNF"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp;
+
+    const DEFAULT_CATEGORIES = [
+      {slug:'actualites', label:'Actualités', icon:'fa-newspaper', order:10, active:true},
+      {slug:'reportages', label:'Reportages', icon:'fa-video', order:20, active:true},
+      {slug:'publicites', label:'Publicités', icon:'fa-bullhorn', order:30, active:true},
+      {slug:'debats', label:'Débats', icon:'fa-comments', order:40, active:true},
+      {slug:'micro-trottoirs', label:'Micro-trottoirs', icon:'fa-microphone', order:50, active:true},
+      {slug:'evangelisation', label:'Évangélisation', icon:'fa-cross', order:60, active:true},
+      {slug:'mariage', label:'Mariage', icon:'fa-heart', order:70, active:true},
+      {slug:'message', label:'Message', icon:'fa-message', order:80, active:true}
+    ];
+
+    const DEFAULT_SETTINGS = {
+      siteName:'LTcine TV',
+      tagline:'Actualités • Reportages • Évangélisation',
+      logoUrl:'https://i.ibb.co/Q7NBvsD7/LT-20260319-205453-0000.png',
+      heroTitle:"L'information, les messages et vos événements en un seul espace",
+      heroText:"Actualités, reportages, messages, photos, vidéos et galeries de prestations.",
+      searchPlaceholder:'Rechercher une actualité, un reportage, un message…',
+      aboutTitle:"Christ au centre, la communication au service de l'édification",
+      aboutText1:"LTcine TV est une plateforme média et digitale qui souhaite faciliter la communication entre ceux qui confessent Jésus-Christ comme Seigneur et reconnaissent en lui le fondement du salut. Dans l'esprit d'Éphésiens 4, nous voulons contribuer à l'édification du corps de Christ, dans l'amour, la vérité et le respect.",
+      aboutText2:"LTcine TV n'est ni une Église locale, ni une dénomination, ni une autorité doctrinale. La plateforme ne prétend pas effacer les différences entre communautés chrétiennes : elle offre un espace de diffusion, de témoignage, d'information et de service autour du fondement commun qu'est Jésus-Christ. Chaque contenu doit être reçu avec discernement, dans le respect des Écritures et de la responsabilité des Églises locales.",
+      whatsapp:'+226 73 66 91 04',
+      email:'ltcine@gmail.com',
+      location:'Burkina Faso',
+      facebook:'https://www.facebook.com/share/1CBdvAu4oc/',
+      youtube:'https://www.youtube.com/@ltcinetv',
+      tiktok:'https://tiktok.com/@ltcinetv',
+      galleryTitle:'Retrouvez votre reportage, vos photos ou vos vidéos',
+      galleryText:"Après une prestation LTcine TV, recherchez votre événement puis ouvrez directement sa galerie ou son espace média.",
+      tickerSpeed:18,
+      bodyFont:'Poppins',
+      headingFont:'Poppins'
+    };
+
+    const $ = (s,p=document)=>p.querySelector(s);
+    const $$ = (s,p=document)=>[...p.querySelectorAll(s)];
+    const state = { categories:[], news:[], ticker:[], verses:[], live:[], galleries:[], subscribers:[], members:[], currentUser:null, confirmAction:null };
+
+    function text(v,max=10000){ return v==null?'':String(v).trim().slice(0,max); }
+    function slugify(value){
+      return text(value,80).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+        .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80);
+    }
+    function dateLabel(ts){
+      try{
+        if(!ts || typeof ts.toDate!=='function') return '';
+        return new Intl.DateTimeFormat('fr-FR',{dateStyle:'medium',timeStyle:'short'}).format(ts.toDate());
+      }catch{return ''}
+    }
+    function safeUrl(v){
+      try{
+        const u=new URL(text(v,1000));
+        return ['http:','https:'].includes(u.protocol)?u.href:'';
+      }catch{return ''}
+    }
+    function escapeAttr(v){ return text(v,300).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function toast(message,type='success'){
+      const el=$('#toast'); el.textContent=text(message,240); el.className=`toast ${type} show`;
+      clearTimeout(toast.timer); toast.timer=setTimeout(()=>el.classList.remove('show'),3400);
+    }
+
+    function showSection(name){
+      $$('.admin-section').forEach(s=>s.classList.toggle('active',s.id===`section-${name}`));
+      $$('.nav-btn[data-section]').forEach(b=>b.classList.toggle('active',b.dataset.section===name));
+      const titles={dashboard:'Tableau de bord',settings:'Informations du site',categories:'Catégories',news:'Actualités & Messages',ticker:"Bandeau d'annonces",verses:'Versets',live:'Directs',galleries:'Prestations & Galeries',members:'Membres',subscribers:'Abonnés',broadcast:'Diffusion e-mail'};
+      $('#pageTitle').textContent=titles[name]||'Administration';
+      $('#sidebar').classList.remove('open');
+    }
+
+    $$('.nav-btn[data-section]').forEach(btn=>btn.addEventListener('click',()=>showSection(btn.dataset.section)));
+    $$('.quick-nav').forEach(btn=>btn.addEventListener('click',()=>showSection(btn.dataset.go)));
+    $('#mobileMenuBtn').addEventListener('click',()=>$('#sidebar').classList.toggle('open'));
+
+    function confirmDelete(message,action){
+      state.confirmAction=action; $('#confirmText').textContent=message; $('#confirmModal').classList.add('show');
+    }
+    $('#confirmCancel').addEventListener('click',()=>{$('#confirmModal').classList.remove('show');state.confirmAction=null});
+    $('#confirmDelete').addEventListener('click',async()=>{
+      if(!state.confirmAction)return;
+      const fn=state.confirmAction; state.confirmAction=null; $('#confirmModal').classList.remove('show');
+      try{await fn();toast('Suppression effectuée.')}catch(e){console.error(e);toast('Suppression impossible.','error')}
+    });
+
+    /* AUTH */
+    $('#loginForm').addEventListener('submit',async e=>{
+      e.preventDefault(); const btn=$('#loginBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Connexion…';
+      try{
+        await auth.signInWithEmailAndPassword(text($('#loginEmail').value,120),$('#loginPassword').value);
+      }catch(err){
+        console.error(err);toast('Connexion impossible. Vérifiez vos identifiants.','error');
+      }finally{
+        btn.disabled=false;btn.innerHTML='<i class="fas fa-right-to-bracket"></i> Se connecter';
+      }
+    });
+    $('#logoutBtn').addEventListener('click',()=>auth.signOut());
+
+    auth.onAuthStateChanged(async user=>{
+      state.currentUser=user||null;
+
+      if(!user){
+        $('#loginPage').classList.remove('hidden');
+        $('#adminLayout').classList.remove('active');
+        return;
+      }
+
+      try{
+        const adminSnap = await db.collection('admins').doc(user.uid).get();
+        if(!adminSnap.exists){
+          toast("Ce compte n'est pas autorisé à administrer LTcine TV.", 'error');
+          await auth.signOut();
+          return;
         }
+      }catch(err){
+        console.error('Vérification administrateur:', err);
+        toast("Accès administrateur refusé. Vérifiez les règles Firestore et le document admins/UID.", 'error');
+        await auth.signOut();
+        return;
+      }
 
-        // Auth State
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                document.getElementById('loginPage').style.display = 'none';
-                document.getElementById('adminLayout').classList.add('active');
-                document.getElementById('userEmail').textContent = user.email;
-                document.getElementById('userName').textContent = user.email.split('@')[0];
-                document.getElementById('userAvatar').textContent = user.email[0].toUpperCase();
-                loadDashboard();
-            } else {
-                document.getElementById('loginPage').style.display = 'flex';
-                document.getElementById('adminLayout').classList.remove('active');
-            }
+      $('#loginPage').classList.add('hidden');
+      $('#adminLayout').classList.add('active');
+      $('#userEmail').textContent=user.email||'Administrateur';
+      $('#userAvatar').textContent=(user.email||'A').charAt(0).toUpperCase();
+      await initializeAdmin();
+    });
+
+    async function initializeAdmin(){
+      await ensureDefaults();
+      await Promise.allSettled([loadSettings(),loadCategories(),loadNews(),loadTicker(),loadVerses(),loadLive(),loadGalleries(),loadMembers(),loadSubscribers()]);
+      updateStats();
+    }
+
+    async function ensureDefaults(){
+      const settingsRef=db.collection('siteSettings').doc('general');
+      const [settingsSnap,catsSnap]=await Promise.all([settingsRef.get(),db.collection('categories').limit(1).get()]);
+      if(!settingsSnap.exists) await settingsRef.set({...DEFAULT_SETTINGS,updatedAt:serverTimestamp()},{merge:true});
+      if(catsSnap.empty){
+        const batch=db.batch();
+        DEFAULT_CATEGORIES.forEach(c=>batch.set(db.collection('categories').doc(c.slug),{...c,createdAt:serverTimestamp(),updatedAt:serverTimestamp()}));
+        await batch.commit();
+      }
+    }
+
+    /* SETTINGS */
+    const settingMap={
+      setSiteName:'siteName',setTagline:'tagline',setLogoUrl:'logoUrl',setHeroTitle:'heroTitle',setHeroText:'heroText',
+      setSearchPlaceholder:'searchPlaceholder',setAboutTitle:'aboutTitle',setAboutText1:'aboutText1',setAboutText2:'aboutText2',
+      setWhatsapp:'whatsapp',setEmail:'email',setLocation:'location',setFacebook:'facebook',setYoutube:'youtube',setTiktok:'tiktok',
+      setGalleryTitle:'galleryTitle',setGalleryText:'galleryText',setTickerSpeed:'tickerSpeed',
+      setBodyFont:'bodyFont',setHeadingFont:'headingFont'
+    };
+    async function loadSettings(){
+      const snap=await db.collection('siteSettings').doc('general').get();
+      const d={...DEFAULT_SETTINGS,...(snap.exists?snap.data():{})};
+      Object.entries(settingMap).forEach(([id,key])=>{const el=$('#'+id);if(el)el.value=d[key]??''});
+      updateFontPreview();
+    }
+    $('#settingsForm').addEventListener('submit',async e=>{
+      e.preventDefault();const btn=$('#saveSettingsBtn');btn.disabled=true;
+      try{
+        const payload={};
+        Object.entries(settingMap).forEach(([id,key])=>{
+          const el=$('#'+id); payload[key]=key==='tickerSpeed'?Math.max(8,Math.min(80,Number(el.value)||18)):text(el.value,key.includes('Text')?1800:1000);
         });
+        await db.collection('siteSettings').doc('general').set({...payload,updatedAt:serverTimestamp()},{merge:true});
+        toast('Informations du site enregistrées.');
+      }catch(err){console.error(err);toast("Impossible d'enregistrer les réglages.",'error')}
+      finally{btn.disabled=false}
+    });
 
-        // Login
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const btn = document.getElementById('loginBtn');
-            
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading-spinner"></span> Connexion...';
-            
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-                showToast('Connexion réussie !', 'success');
-            } catch (error) {
-                showToast(error.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Se connecter';
-            }
-        });
 
-        // Logout
-        document.getElementById('logoutBtn').addEventListener('click', async () => {
-            if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
-                await auth.signOut();
-                showToast('Déconnexion réussie', 'info');
-            }
-        });
+    function updateFontPreview(){
+      const body = $('#setBodyFont')?.value || 'Poppins';
+      const heading = $('#setHeadingFont')?.value || 'Poppins';
+      const preview = $('#fontPreview');
+      if(preview){
+        preview.style.fontFamily = `'${body}', sans-serif`;
+        preview.innerHTML = `<strong style="font-family:'${heading}',sans-serif">Titre LTcine TV</strong><br>Une communication claire, lisible et professionnelle.`;
+      }
+    }
+    $('#setBodyFont')?.addEventListener('change',updateFontPreview);
+    $('#setHeadingFont')?.addEventListener('change',updateFontPreview);
 
-        // Navigation
-        function navigateTo(section) {
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            document.querySelector(`.nav-item[data-section="${section}"]`).classList.add('active');
-            
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.getElementById(`section-${section}`).classList.add('active');
-            
-            // Load data
-            if (section === 'dashboard') loadDashboard();
-            if (section === 'ticker') loadTicker();
-            if (section === 'verses') loadVerses();
-            if (section === 'news') loadNews();
-            if (section === 'live') loadLive();
-            if (section === 'downloads') loadDownloads();
-            if (section === 'subscribers') loadSubscribers();
-            
-            // Close mobile menu
-            document.getElementById('sidebar').classList.remove('open');
-        }
+    /* CATEGORIES */
+    async function loadCategories(){
+      const snap=await db.collection('categories').orderBy('order','asc').get();
+      state.categories=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderCategories();renderCategorySelect();updateStats();
+    }
+    function renderCategories(){
+      const box=$('#categoriesList');box.replaceChildren();
+      if(!state.categories.length){box.innerHTML='<div class="empty">Aucune catégorie.</div>';return}
+      state.categories.forEach(c=>{
+        const el=document.createElement('div');el.className='item';
+        const left=document.createElement('div');
+        const title=document.createElement('div');title.className='item-title';title.textContent=c.label||c.slug;
+        const meta=document.createElement('div');meta.className='item-meta';
+        meta.innerHTML=`<span>${escapeAttr(c.slug)}</span><span>Ordre ${Number(c.order)||0}</span><span class="badge ${c.active===false?'off':''}">${c.active===false?'Inactive':'Active'}</span>`;
+        left.append(title,meta);
+        const actions=document.createElement('div');actions.className='item-actions';
+        actions.innerHTML='<button class="icon-btn edit" title="Modifier"><i class="fas fa-pen"></i></button><button class="icon-btn delete" title="Supprimer"><i class="fas fa-trash"></i></button>';
+        actions.children[0].onclick=()=>editCategory(c);
+        actions.children[1].onclick=()=>confirmDelete(`Supprimer la catégorie « ${c.label||c.slug} » ? Les contenus déjà associés conserveront leur slug.`,async()=>{await db.collection('categories').doc(c.id).delete();await loadCategories()});
+        el.append(left,actions);box.appendChild(el);
+      });
+    }
+    function renderCategorySelect(){
+      const select=$('#newsCategory');const current=select.value;select.replaceChildren();
+      state.categories.filter(c=>c.active!==false).forEach(c=>{const o=document.createElement('option');o.value=c.slug;o.textContent=c.label||c.slug;select.appendChild(o)});
+      if([...select.options].some(o=>o.value===current))select.value=current;
+    }
+    function resetCategoryForm(){
+      $('#categoryForm').reset();$('#categoryEditingId').value='';$('#categoryActive').checked=true;$('#categoryOrder').value=10;$('#categorySlug').readOnly=false;
+      $('#categoryFormTitle').textContent='Nouvelle catégorie';$('#categoryCancel').classList.add('hidden');
+    }
+    function editCategory(c){
+      $('#categoryEditingId').value=c.id;$('#categoryLabel').value=c.label||'';$('#categorySlug').value=c.slug||c.id;$('#categorySlug').readOnly=true;
+      $('#categoryIcon').value=c.icon||'fa-tag';$('#categoryOrder').value=Number(c.order)||0;$('#categoryActive').checked=c.active!==false;
+      $('#categoryFormTitle').textContent='Modifier la catégorie';$('#categoryCancel').classList.remove('hidden');showSection('categories');window.scrollTo({top:0,behavior:'smooth'});
+    }
+    $('#categoryCancel').onclick=resetCategoryForm;
+    $('#categoryLabel').addEventListener('input',()=>{if(!$('#categoryEditingId').value)$('#categorySlug').value=slugify($('#categoryLabel').value)});
+    $('#categoryForm').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const editId=$('#categoryEditingId').value;
+      const slug=slugify($('#categorySlug').value||$('#categoryLabel').value);
+      if(!slug){toast('Slug de catégorie invalide.','error');return}
+      const payload={slug,label:text($('#categoryLabel').value,80),icon:text($('#categoryIcon').value,80)||'fa-tag',order:Number($('#categoryOrder').value)||0,active:$('#categoryActive').checked,updatedAt:serverTimestamp()};
+      try{
+        const ref=db.collection('categories').doc(editId||slug);
+        if(!editId)payload.createdAt=serverTimestamp();
+        await ref.set(payload,{merge:true});toast('Catégorie enregistrée.');resetCategoryForm();await loadCategories();
+      }catch(err){console.error(err);toast("Impossible d'enregistrer la catégorie.",'error')}
+    });
 
-        document.querySelectorAll('.nav-item[data-section]').forEach(item => {
-            item.addEventListener('click', () => navigateTo(item.dataset.section));
-        });
+    /* GENERIC ITEM HELPERS */
+    function cancelForm(prefix){
+      $('#'+prefix+'Form').reset();$('#'+prefix+'EditingId').value='';$('#'+prefix+'Cancel').classList.add('hidden');
+    }
 
-        // Mobile Menu
-        document.getElementById('menuToggle').addEventListener('click', () => {
-            document.getElementById('sidebar').classList.toggle('open');
-        });
+    /* NEWS */
+    async function loadNews(){
+      const snap=await db.collection('news').orderBy('timestamp','desc').limit(100).get();
+      state.news=snap.docs.map(d=>({id:d.id,...d.data()}));renderNewsList();updateStats();
+    }
+    function renderNewsList(){
+      const q=text($('#newsSearch').value,80).toLowerCase();const box=$('#newsList');box.replaceChildren();
+      const items=state.news.filter(n=>[n.title,n.excerpt,n.content,n.category].join(' ').toLowerCase().includes(q));
+      if(!items.length){box.innerHTML='<div class="empty">Aucun contenu.</div>';return}
+      items.forEach(n=>{
+        const c=state.categories.find(x=>x.slug===n.category);
+        const el=document.createElement('div');el.className='item';
+        const left=document.createElement('div');
+        const title=document.createElement('div');title.className='item-title';title.textContent=n.title||'Sans titre';
+        const meta=document.createElement('div');meta.className='item-meta';meta.innerHTML=`<span class="badge">${escapeAttr(c?.label||n.category||'Actualités')}</span><span>${escapeAttr(dateLabel(n.timestamp))}</span>`;
+        left.append(title,meta);
+        const actions=document.createElement('div');actions.className='item-actions';
+        actions.innerHTML='<button class="icon-btn edit"><i class="fas fa-pen"></i></button><button class="icon-btn delete"><i class="fas fa-trash"></i></button>';
+        actions.children[0].onclick=()=>editNews(n);actions.children[1].onclick=()=>confirmDelete(`Supprimer « ${n.title||'ce contenu'} » ?`,async()=>{await db.collection('news').doc(n.id).delete();await loadNews()});
+        el.append(left,actions);box.appendChild(el);
+      });
+    }
+    $('#newsSearch').addEventListener('input',renderNewsList);
+    function editNews(n){
+      $('#newsEditingId').value=n.id;$('#newsTitle').value=n.title||'';$('#newsCategory').value=n.category||'';$('#newsExcerpt').value=n.excerpt||'';$('#newsContent').value=n.content||'';$('#newsImageUrl').value=n.imageUrl||n.image||'';
+      $('#newsFormTitle').textContent='Modifier le contenu';$('#newsCancel').classList.remove('hidden');showSection('news');window.scrollTo({top:0,behavior:'smooth'});
+    }
+    $('#newsCancel').onclick=()=>{cancelForm('news');$('#newsFormTitle').textContent='Nouveau contenu'};
+    $('#newsForm').addEventListener('submit',async e=>{
+      e.preventDefault();const id=$('#newsEditingId').value;
+      const payload={title:text($('#newsTitle').value,220),category:text($('#newsCategory').value,80),excerpt:text($('#newsExcerpt').value,600),content:text($('#newsContent').value,12000),imageUrl:safeUrl($('#newsImageUrl').value),updatedAt:serverTimestamp()};
+      if(!id)payload.timestamp=serverTimestamp();
+      try{const ref=id?db.collection('news').doc(id):db.collection('news').doc();await ref.set(payload,{merge:true});toast('Contenu enregistré.');$('#newsCancel').click();await loadNews()}
+      catch(err){console.error(err);toast("Impossible d'enregistrer le contenu.",'error')}
+    });
 
-        // Dashboard
-        async function loadDashboard() {
-            try {
-                const [newsSnap, tickerSnap, liveSnap, subSnap] = await Promise.all([
-                    db.collection('news').get(),
-                    db.collection('ticker').get(),
-                    db.collection('live').where('active', '==', true).get(),
-                    db.collection('subscribers').get()
-                ]);
-                
-                document.getElementById('statNews').textContent = newsSnap.size;
-                document.getElementById('statTicker').textContent = tickerSnap.size;
-                document.getElementById('statLive').textContent = liveSnap.size;
-                document.getElementById('statSubscribers').textContent = subSnap.size;
-            } catch (error) {
-                console.error('Dashboard error:', error);
-            }
-        }
+    /* TICKER */
+    async function loadTicker(){
+      const snap=await db.collection('ticker').orderBy('timestamp','desc').limit(30).get();state.ticker=snap.docs.map(d=>({id:d.id,...d.data()}));renderTickerList()
+    }
+    function renderTickerList(){
+      const box=$('#tickerList');box.replaceChildren();if(!state.ticker.length){box.innerHTML='<div class="empty">Aucune annonce.</div>';return}
+      state.ticker.forEach(t=>{
+        const el=document.createElement('div');el.className='item';const left=document.createElement('div');left.innerHTML=`<div class="item-title">${escapeAttr(t.text)}</div><div class="item-meta"><span>${escapeAttr(dateLabel(t.timestamp))}</span></div>`;
+        const actions=document.createElement('div');actions.className='item-actions';actions.innerHTML='<button class="icon-btn edit"><i class="fas fa-pen"></i></button><button class="icon-btn delete"><i class="fas fa-trash"></i></button>';
+        actions.children[0].onclick=()=>{$('#tickerEditingId').value=t.id;$('#tickerText').value=t.text||'';$('#tickerCancel').classList.remove('hidden');$('#tickerFormTitle').textContent="Modifier l'annonce"};
+        actions.children[1].onclick=()=>confirmDelete('Supprimer cette annonce ?',async()=>{await db.collection('ticker').doc(t.id).delete();await loadTicker()});
+        el.append(left,actions);box.appendChild(el);
+      })
+    }
+    $('#tickerCancel').onclick=()=>{cancelForm('ticker');$('#tickerFormTitle').textContent='Nouvelle annonce'};
+    $('#tickerForm').addEventListener('submit',async e=>{
+      e.preventDefault();const id=$('#tickerEditingId').value,payload={text:text($('#tickerText').value,240),updatedAt:serverTimestamp()};if(!id)payload.timestamp=serverTimestamp();
+      try{await (id?db.collection('ticker').doc(id):db.collection('ticker').doc()).set(payload,{merge:true});toast('Annonce enregistrée.');$('#tickerCancel').click();await loadTicker()}catch(err){console.error(err);toast('Erreur.','error')}
+    });
 
-        // Modal Functions
-        function openModal(id) {
-            document.getElementById(id).classList.add('active');
-        }
+    /* VERSES */
+    async function loadVerses(){
+      const snap=await db.collection('verses').orderBy('date','desc').limit(60).get();state.verses=snap.docs.map(d=>({id:d.id,...d.data()}));renderVersesList()
+    }
+    function renderVersesList(){
+      const box=$('#versesList');box.replaceChildren();if(!state.verses.length){box.innerHTML='<div class="empty">Aucun verset.</div>';return}
+      state.verses.forEach(v=>{
+        const el=document.createElement('div');el.className='item';const left=document.createElement('div');left.innerHTML=`<div class="item-title">${escapeAttr(v.reference||'Verset')}</div><div class="item-meta"><span>${escapeAttr(v.date||'')}</span></div>`;
+        const actions=document.createElement('div');actions.className='item-actions';actions.innerHTML='<button class="icon-btn edit"><i class="fas fa-pen"></i></button><button class="icon-btn delete"><i class="fas fa-trash"></i></button>';
+        actions.children[0].onclick=()=>{$('#verseEditingId').value=v.id;$('#verseDate').value=v.date||'';$('#verseReference').value=v.reference||'';$('#verseText').value=v.text||'';$('#verseCancel').classList.remove('hidden');$('#verseFormTitle').textContent='Modifier le verset'};
+        actions.children[1].onclick=()=>confirmDelete('Supprimer ce verset ?',async()=>{await db.collection('verses').doc(v.id).delete();await loadVerses()});
+        el.append(left,actions);box.appendChild(el)
+      })
+    }
+    $('#verseCancel').onclick=()=>{cancelForm('verse');$('#verseFormTitle').textContent='Nouveau verset'};
+    $('#verseForm').addEventListener('submit',async e=>{
+      e.preventDefault();const id=$('#verseEditingId').value,payload={date:text($('#verseDate').value,20),reference:text($('#verseReference').value,100),text:text($('#verseText').value,2500),updatedAt:serverTimestamp()};if(!id)payload.timestamp=serverTimestamp();
+      try{await (id?db.collection('verses').doc(id):db.collection('verses').doc()).set(payload,{merge:true});toast('Verset enregistré.');$('#verseCancel').click();await loadVerses()}catch(err){console.error(err);toast('Erreur.','error')}
+    });
 
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-        }
+    /* LIVE */
+    async function loadLive(){
+      const snap=await db.collection('live').orderBy('timestamp','desc').limit(50).get();state.live=snap.docs.map(d=>({id:d.id,...d.data()}));renderLiveList()
+    }
+    function renderLiveList(){
+      const box=$('#liveList');box.replaceChildren();if(!state.live.length){box.innerHTML='<div class="empty">Aucun direct.</div>';return}
+      state.live.forEach(v=>{
+        const el=document.createElement('div');el.className='item';const left=document.createElement('div');left.innerHTML=`<div class="item-title">${escapeAttr(v.title||'Direct')}</div><div class="item-meta"><span>${escapeAttr(v.platform||'')}</span><span class="badge ${v.active===false?'off':''}">${v.active===false?'Inactif':'Actif'}</span></div>`;
+        const actions=document.createElement('div');actions.className='item-actions';actions.innerHTML='<button class="icon-btn edit"><i class="fas fa-pen"></i></button><button class="icon-btn delete"><i class="fas fa-trash"></i></button>';
+        actions.children[0].onclick=()=>{$('#liveEditingId').value=v.id;$('#liveTitle').value=v.title||'';$('#livePlatform').value=v.platform||'youtube';$('#liveLink').value=v.link||'';$('#liveActive').checked=v.active!==false;$('#liveCancel').classList.remove('hidden');$('#liveFormTitle').textContent='Modifier le direct'};
+        actions.children[1].onclick=()=>confirmDelete('Supprimer ce direct ?',async()=>{await db.collection('live').doc(v.id).delete();await loadLive()});
+        el.append(left,actions);box.appendChild(el)
+      })
+    }
+    $('#liveCancel').onclick=()=>{cancelForm('live');$('#liveFormTitle').textContent='Nouveau direct';$('#liveActive').checked=true};
+    $('#liveForm').addEventListener('submit',async e=>{
+      e.preventDefault();const id=$('#liveEditingId').value,payload={title:text($('#liveTitle').value,220),platform:text($('#livePlatform').value,30),link:safeUrl($('#liveLink').value),active:$('#liveActive').checked,updatedAt:serverTimestamp()};if(!id)payload.timestamp=serverTimestamp();
+      if(!payload.link){toast('Lien du direct invalide.','error');return}
+      try{await (id?db.collection('live').doc(id):db.collection('live').doc()).set(payload,{merge:true});toast('Direct enregistré.');$('#liveCancel').click();await loadLive()}catch(err){console.error(err);toast('Erreur.','error')}
+    });
 
-        // Close modal on overlay click
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) {
-                    overlay.classList.remove('active');
-                }
+    /* GALLERIES */
+    async function loadGalleries(){
+      const snap=await db.collection('downloads').orderBy('timestamp','desc').limit(100).get();state.galleries=snap.docs.map(d=>({id:d.id,...d.data()}));renderGalleriesList();updateStats()
+    }
+    function renderGalleriesList(){
+      const box=$('#galleriesList');box.replaceChildren();if(!state.galleries.length){box.innerHTML='<div class="empty">Aucune galerie.</div>';return}
+      state.galleries.forEach(g=>{
+        const el=document.createElement('div');el.className='item';const left=document.createElement('div');left.innerHTML=`<div class="item-title">${escapeAttr(g.title||'Galerie')}</div><div class="item-meta"><span>${escapeAttr(dateLabel(g.timestamp))}</span></div>`;
+        const actions=document.createElement('div');actions.className='item-actions';actions.innerHTML='<button class="icon-btn view"><i class="fas fa-arrow-up-right-from-square"></i></button><button class="icon-btn edit"><i class="fas fa-pen"></i></button><button class="icon-btn delete"><i class="fas fa-trash"></i></button>';
+        actions.children[0].onclick=()=>{const u=safeUrl(g.link);if(u)window.open(u,'_blank','noopener')};
+        actions.children[1].onclick=()=>{$('#galleryEditingId').value=g.id;$('#galleryTitle').value=g.title||'';$('#galleryDescription').value=g.description||'';$('#galleryLink').value=g.link||'';$('#galleryCancel').classList.remove('hidden');$('#galleryFormTitle').textContent='Modifier la prestation / galerie'};
+        actions.children[2].onclick=()=>confirmDelete('Supprimer cette galerie ?',async()=>{await db.collection('downloads').doc(g.id).delete();await loadGalleries()});
+        el.append(left,actions);box.appendChild(el)
+      })
+    }
+    $('#galleryCancel').onclick=()=>{cancelForm('gallery');$('#galleryFormTitle').textContent='Nouvelle prestation / galerie'};
+    $('#galleryForm').addEventListener('submit',async e=>{
+      e.preventDefault();const id=$('#galleryEditingId').value,payload={title:text($('#galleryTitle').value,220),description:text($('#galleryDescription').value,1000),link:safeUrl($('#galleryLink').value),updatedAt:serverTimestamp()};if(!id)payload.timestamp=serverTimestamp();
+      if(!payload.link){toast('Lien de galerie invalide.','error');return}
+      try{await (id?db.collection('downloads').doc(id):db.collection('downloads').doc()).set(payload,{merge:true});toast('Galerie enregistrée.');$('#galleryCancel').click();await loadGalleries()}catch(err){console.error(err);toast('Erreur.','error')}
+    });
+
+
+    /* MEMBERS */
+    async function loadMembers(){
+      try{
+        const snap=await db.collection('users').orderBy('createdAt','desc').limit(500).get();
+        state.members=snap.docs.map(d=>({id:d.id,...d.data()}));
+        renderMembers();
+        updateBroadcastCounts();
+        updateStats();
+      }catch(err){
+        console.error(err);
+        $('#membersList').innerHTML='<div class="empty">Impossible de charger les membres. Vérifiez vos règles Firestore.</div>';
+      }
+    }
+
+    function renderMembers(){
+      const box=$('#membersList'); box.replaceChildren();
+      if(!state.members.length){ box.innerHTML='<div class="empty">Aucun membre.</div>'; return; }
+
+      state.members.forEach(m=>{
+        const el=document.createElement('div'); el.className='item';
+        const left=document.createElement('div');
+        const name=[m.firstName,m.lastName].filter(Boolean).join(' ') || 'Membre';
+        const title=document.createElement('div'); title.className='item-title'; title.textContent=name;
+        const meta=document.createElement('div'); meta.className='item-meta';
+        const parts=[
+          m.email||'',
+          m.city ? `Ville : ${m.city}` : '',
+          m.age ? `Âge : ${m.age}` : '',
+          m.provider ? `Connexion : ${m.provider}` : ''
+        ].filter(Boolean);
+        parts.forEach(v=>{const s=document.createElement('span');s.textContent=v;meta.appendChild(s)});
+        const badge=document.createElement('span');badge.className=`badge ${m.emailOptIn?'':'off'}`;badge.textContent=m.emailOptIn?'E-mail accepté':'Pas d’e-mail';meta.appendChild(badge);
+        left.append(title,meta);el.append(left);box.appendChild(el);
+      });
+    }
+
+    function uniqueEmails(items){
+      return [...new Set(items.map(v=>text(v,120).toLowerCase()).filter(v=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)))];
+    }
+
+    function getBroadcastRecipients(audience){
+      const memberEmails=state.members.filter(m=>m.emailOptIn===true).map(m=>m.email);
+      const subscriberEmails=state.subscribers.filter(s=>s.active!==false).map(s=>s.email);
+      if(audience==='members') return uniqueEmails(memberEmails);
+      if(audience==='subscribers') return uniqueEmails(subscriberEmails);
+      return uniqueEmails([...memberEmails,...subscriberEmails]);
+    }
+
+    function updateBroadcastCounts(){
+      const members=uniqueEmails(state.members.filter(m=>m.emailOptIn===true).map(m=>m.email));
+      const subscribers=uniqueEmails(state.subscribers.filter(s=>s.active!==false).map(s=>s.email));
+      if($('#broadcastMembersCount')) $('#broadcastMembersCount').textContent=members.length;
+      if($('#broadcastSubscribersCount')) $('#broadcastSubscribersCount').textContent=subscribers.length;
+    }
+
+    $('#broadcastForm')?.addEventListener('submit',async e=>{
+      e.preventDefault();
+      const subject=text($('#broadcastSubject').value,180);
+      const message=text($('#broadcastMessage').value,7000);
+      const audience=$('#broadcastAudience').value;
+      const recipients=getBroadcastRecipients(audience);
+
+      if(!recipients.length){toast('Aucun destinataire éligible pour cette sélection.','error');return}
+      if(!subject || !message){toast('Objet et message obligatoires.','error');return}
+
+      const ok=window.confirm(`Créer ${recipients.length} envoi(s) e-mail dans Firestore ?`);
+      if(!ok)return;
+
+      const btn=$('#broadcastBtn');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Préparation…';
+
+      try{
+        const chunks=[];
+        for(let i=0;i<recipients.length;i+=400) chunks.push(recipients.slice(i,i+400));
+
+        for(const group of chunks){
+          const batch=db.batch();
+          group.forEach(email=>{
+            const ref=db.collection('mail').doc();
+            batch.set(ref,{
+              to:[email],
+              message:{subject,text:message},
+              createdBy:state.currentUser.uid,
+              createdAt:serverTimestamp(),
+              audience
             });
+          });
+          await batch.commit();
+        }
+
+        await db.collection('emailCampaigns').add({
+          subject,
+          message,
+          audience,
+          recipientCount:recipients.length,
+          createdBy:state.currentUser.uid,
+          createdAt:serverTimestamp()
         });
 
-        // ============ TICKER ============
-        async function loadTicker() {
-            const list = document.getElementById('tickerList');
-            list.innerHTML = '<div class="loading-spinner"></div>';
-            
-            try {
-                const snapshot = await db.collection('ticker').orderBy('timestamp', 'desc').get();
-                
-                if (snapshot.empty) {
-                    list.innerHTML = '<div class="empty-state"><i class="fas fa-bolt"></i><p>Aucune info roulante</p></div>';
-                    return;
-                }
-                
-                let html = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('fr-FR') : '';
-                    html += `
-                        <div class="item-card">
-                            <div class="item-info">
-                                <div class="item-title">${data.text}</div>
-                                <div class="item-meta">
-                                    <span><i class="fas fa-calendar"></i> ${date}</span>
-                                </div>
-                            </div>
-                            <div class="item-actions">
-                                <button class="btn-icon edit" onclick="editTicker('${doc.id}', '${data.text.replace(/'/g, "\\'")}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-icon delete" onclick="deleteTicker('${doc.id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                list.innerHTML = html;
-            } catch (error) {
-                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Erreur de chargement</p></div>';
-            }
-        }
+        toast(`${recipients.length} message(s) préparé(s) pour l'envoi.`);
+        e.currentTarget.reset();
+      }catch(err){
+        console.error(err);
+        toast("Impossible de préparer l'envoi. Vérifiez les règles et l'extension e-mail.",'error');
+      }finally{
+        btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Envoyer à la liste';
+      }
+    });
 
-        function openTickerModal() {
-            document.getElementById('tickerForm').reset();
-            document.getElementById('tickerId').value = '';
-            document.getElementById('tickerModalTitle').textContent = 'Ajouter une info roulante';
-            openModal('tickerModal');
-        }
 
-        function editTicker(id, text) {
-            document.getElementById('tickerId').value = id;
-            document.getElementById('tickerText').value = text;
-            document.getElementById('tickerModalTitle').textContent = 'Modifier l\'info roulante';
-            openModal('tickerModal');
-        }
+    /* SUBSCRIBERS */
+    async function loadSubscribers(){
+      try{
+        const snap=await db.collection('subscribers').orderBy('timestamp','desc').limit(500).get();state.subscribers=snap.docs.map(d=>({id:d.id,...d.data()}));renderSubscribers();updateBroadcastCounts();updateStats()
+      }catch(err){
+        console.error(err);$('#subscribersList').innerHTML='<div class="empty">Lecture des abonnés refusée par les règles Firestore actuelles.</div>'
+      }
+    }
+    function renderSubscribers(){
+      const box=$('#subscribersList');box.replaceChildren();if(!state.subscribers.length){box.innerHTML='<div class="empty">Aucun abonné.</div>';return}
+      state.subscribers.forEach(s=>{
+        const el=document.createElement('div');el.className='item';
+        const left=document.createElement('div');left.innerHTML=`<div class="item-title">${escapeAttr(s.name||'Abonné')}</div><div class="item-meta"><span>${escapeAttr(s.email||'')}</span><span>${escapeAttr(dateLabel(s.timestamp))}</span></div>`;
+        el.append(left);box.appendChild(el)
+      })
+    }
 
-        document.getElementById('tickerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('tickerId').value;
-            const text = document.getElementById('tickerText').value;
-            
-            try {
-                const data = {
-                    text: text,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                
-                if (id) {
-                    await db.collection('ticker').doc(id).update(data);
-                    showToast('Info modifiée avec succès', 'success');
-                } else {
-                    await db.collection('ticker').add(data);
-                    showToast('Info ajoutée avec succès', 'success');
-                }
-                
-                closeModal('tickerModal');
-                loadTicker();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        });
-
-        async function deleteTicker(id) {
-            if (!confirm('Supprimer cette info roulante ?')) return;
-            try {
-                await db.collection('ticker').doc(id).delete();
-                showToast('Info supprimée', 'success');
-                loadTicker();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        }
-
-        // ============ VERSES ============
-        async function loadVerses() {
-            const list = document.getElementById('versesList');
-            list.innerHTML = '<div class="loading-spinner"></div>';
-            
-            try {
-                const snapshot = await db.collection('verses').orderBy('date', 'desc').get();
-                
-                if (snapshot.empty) {
-                    list.innerHTML = '<div class="empty-state"><i class="fas fa-book-bible"></i><p>Aucun verset ajouté</p></div>';
-                    return;
-                }
-                
-                let html = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    html += `
-                        <div class="item-card">
-                            <div class="item-info">
-                                <div class="item-title">${data.text.substring(0, 80)}${data.text.length > 80 ? '...' : ''}</div>
-                                <div class="item-meta">
-                                    <span><i class="fas fa-calendar"></i> ${data.date}</span>
-                                    <span><i class="fas fa-bookmark"></i> ${data.reference}</span>
-                                </div>
-                            </div>
-                            <div class="item-actions">
-                                <button class="btn-icon edit" onclick='editVerse("${doc.id}", ${JSON.stringify(data)})'>
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-icon delete" onclick="deleteVerse('${doc.id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                list.innerHTML = html;
-            } catch (error) {
-                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Erreur de chargement</p></div>';
-            }
-        }
-
-        function openVerseModal() {
-            document.getElementById('verseForm').reset();
-            document.getElementById('verseId').value = '';
-            document.getElementById('verseDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('verseModalTitle').textContent = 'Ajouter un verset';
-            openModal('verseModal');
-        }
-
-        function editVerse(id, data) {
-            document.getElementById('verseId').value = id;
-            document.getElementById('verseDate').value = data.date;
-            document.getElementById('verseText').value = data.text;
-            document.getElementById('verseReference').value = data.reference;
-            document.getElementById('verseModalTitle').textContent = 'Modifier le verset';
-            openModal('verseModal');
-        }
-
-        document.getElementById('verseForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('verseId').value;
-            const data = {
-                date: document.getElementById('verseDate').value,
-                text: document.getElementById('verseText').value,
-                reference: document.getElementById('verseReference').value
-            };
-            
-            try {
-                if (id) {
-                    await db.collection('verses').doc(id).update(data);
-                    showToast('Verset modifié', 'success');
-                } else {
-                    await db.collection('verses').add(data);
-                    showToast('Verset ajouté', 'success');
-                }
-                closeModal('verseModal');
-                loadVerses();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        });
-
-        async function deleteVerse(id) {
-            if (!confirm('Supprimer ce verset ?')) return;
-            try {
-                await db.collection('verses').doc(id).delete();
-                showToast('Verset supprimé', 'success');
-                loadVerses();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        }
-
-        // ============ NEWS ============
-        async function loadNews() {
-            const list = document.getElementById('newsList');
-            list.innerHTML = '<div class="loading-spinner"></div>';
-            
-            try {
-                const snapshot = await db.collection('news').orderBy('timestamp', 'desc').get();
-                
-                if (snapshot.empty) {
-                    list.innerHTML = '<div class="empty-state"><i class="fas fa-newspaper"></i><p>Aucune actualité</p></div>';
-                    return;
-                }
-                
-                let html = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('fr-FR') : '';
-                    const categoryLabels = {
-                        'actualites': 'Actualités',
-                        'reportages': 'Reportages',
-                        'publicites': 'Publicités',
-                        'debats': 'Débats',
-                        'micro-trottoirs': 'Micro-trottoirs',
-                        'evangelisation': 'Évangélisation',
-                        'mariage': 'Mariage'
-                    };
-                    const badgeColors = {
-                        'actualites': 'blue',
-                        'reportages': 'purple',
-                        'publicites': 'yellow',
-                        'debats': 'green',
-                        'micro-trottoirs': 'red',
-                        'evangelisation': 'blue',
-                        'mariage': 'purple'
-                    };
-                    
-                    html += `
-                        <div class="item-card">
-                            <div class="item-info">
-                                <div class="item-title">${data.title}</div>
-                                <div class="item-meta">
-                                    <span class="badge badge-${badgeColors[data.category] || 'blue'}">${categoryLabels[data.category] || data.category}</span>
-                                    <span><i class="fas fa-calendar"></i> ${date}</span>
-                                    ${data.imageUrl ? '<span><i class="fas fa-image"></i> Avec image</span>' : ''}
-                                </div>
-                            </div>
-                            <div class="item-actions">
-                                <button class="btn-icon view" onclick="viewNews('${doc.id}')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn-icon edit" onclick="editNews('${doc.id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-icon delete" onclick="deleteNews('${doc.id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                list.innerHTML = html;
-            } catch (error) {
-                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Erreur de chargement</p></div>';
-            }
-        }
-
-        function openNewsModal() {
-            document.getElementById('newsForm').reset();
-            document.getElementById('newsId').value = '';
-            document.getElementById('newsContent').innerHTML = '';
-            document.getElementById('newsImagePreview').innerHTML = '';
-            document.getElementById('newsImageUrl').value = '';
-            document.getElementById('newsModalTitle').textContent = 'Nouvelle actualité';
-            updateWordCount();
-            openModal('newsModal');
-        }
-
-        async function editNews(id) {
-            try {
-                const doc = await db.collection('news').doc(id).get();
-                if (!doc.exists) return;
-                
-                const data = doc.data();
-                document.getElementById('newsId').value = id;
-                document.getElementById('newsTitle').value = data.title;
-                document.getElementById('newsCategory').value = data.category;
-                document.getElementById('newsExcerpt').value = data.excerpt;
-                document.getElementById('newsContent').innerHTML = data.content;
-                document.getElementById('newsImageUrl').value = data.imageUrl || '';
-                
-                if (data.imageUrl) {
-                    document.getElementById('newsImagePreview').innerHTML = `<img src="${data.imageUrl}" alt="Preview">`;
-                }
-                
-                document.getElementById('newsModalTitle').textContent = 'Modifier l\'actualité';
-                updateWordCount();
-                openModal('newsModal');
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        }
-
-        function viewNews(id) {
-            db.collection('news').doc(id).get().then(doc => {
-                if (!doc.exists) return;
-                const data = doc.data();
-                const modal = document.createElement('div');
-                modal.className = 'modal-overlay active';
-                modal.innerHTML = `
-                    <div class="modal" style="max-width: 900px;">
-                        <button class="modal-close" onclick="this.parentElement.parentElement.remove()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                        ${data.imageUrl ? `<img src="${data.imageUrl}" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 12px; margin-bottom: 1.5rem;">` : ''}
-                        <h2 style="font-size: 2rem; margin-bottom: 1rem;">${data.title}</h2>
-                        <p style="color: var(--primary-yellow); margin-bottom: 1.5rem;">
-                            <i class="fas fa-calendar"></i> ${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('fr-FR', {year: 'numeric', month: 'long', day: 'numeric'}) : ''}
-                            <span class="badge badge-blue" style="margin-left: 1rem;">${data.category}</span>
-                        </p>
-                        <div style="color: rgba(255,255,255,0.9); line-height: 1.8; font-size: 1.05rem;">${data.content}</div>
-                    </div>
-                `;
-                modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-                document.body.appendChild(modal);
-            });
-        }
-
-        // Rich Text Editor
-        function execCmd(command, value = null) {
-            document.execCommand(command, false, value);
-            document.getElementById('newsContent').focus();
-        }
-
-        function insertLink() {
-            const url = prompt('Entrez l\'URL du lien :');
-            if (url) {
-                execCmd('createLink', url);
-            }
-        }
-
-        async function insertEditorImage(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            if (!file.type.startsWith('image/')) {
-                showToast('Veuillez sélectionner une image', 'error');
-                return;
-            }
-            
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('Image trop volumineuse (max 5MB)', 'error');
-                return;
-            }
-            
-            showToast('Upload de l\'image en cours...', 'info');
-            
-            try {
-                const storageRef = storage.ref();
-                const imageRef = storageRef.child('news_images/' + Date.now() + '_' + file.name);
-                const snapshot = await imageRef.put(file);
-                const url = await snapshot.ref.getDownloadURL();
-                
-                execCmd('insertImage', url);
-                showToast('Image insérée avec succès', 'success');
-            } catch (error) {
-                showToast('Erreur lors de l\'upload: ' + error.message, 'error');
-            }
-            
-            event.target.value = '';
-        }
-
-        // Word Counter
-        document.getElementById('newsContent').addEventListener('input', updateWordCount);
-
-        function updateWordCount() {
-            const content = document.getElementById('newsContent').innerText.trim();
-            const words = content ? content.split(/\s+/).length : 0;
-            const counter = document.getElementById('wordCounter');
-            counter.textContent = `${words} / 2000 mots`;
-            
-            counter.classList.remove('warning', 'danger');
-            if (words > 1800) {
-                counter.classList.add('danger');
-            } else if (words > 1500) {
-                counter.classList.add('warning');
-            }
-        }
-
-        // Image Upload for Cover
-        async function handleImageUpload(event, previewId, urlId) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            if (!file.type.startsWith('image/')) {
-                showToast('Veuillez sélectionner une image', 'error');
-                return;
-            }
-            
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('Image trop volumineuse (max 5MB)', 'error');
-                return;
-            }
-            
-            showToast('Upload en cours...', 'info');
-            
-            try {
-                const storageRef = storage.ref();
-                const imageRef = storageRef.child('news_covers/' + Date.now() + '_' + file.name);
-                const snapshot = await imageRef.put(file);
-                const url = await snapshot.ref.getDownloadURL();
-                
-                document.getElementById(urlId).value = url;
-                document.getElementById(previewId).innerHTML = `<img src="${url}" alt="Preview">`;
-                showToast('Image uploadée avec succès', 'success');
-            } catch (error) {
-                showToast('Erreur: ' + error.message, 'error');
-            }
-        }
-
-        document.getElementById('newsForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const content = document.getElementById('newsContent').innerHTML;
-            const wordCount = document.getElementById('newsContent').innerText.trim().split(/\s+/).length;
-            
-            if (wordCount > 2000) {
-                showToast('Le contenu dépasse 2000 mots', 'error');
-                return;
-            }
-            
-            const btn = document.getElementById('newsSubmitBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading-spinner"></span> Enregistrement...';
-            
-            try {
-                const data = {
-                    title: document.getElementById('newsTitle').value,
-                    category: document.getElementById('newsCategory').value,
-                    excerpt: document.getElementById('newsExcerpt').value,
-                    content: content,
-                    imageUrl: document.getElementById('newsImageUrl').value,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                };
-                
-                const id = document.getElementById('newsId').value;
-                
-                if (id) {
-                    await db.collection('news').doc(id).update(data);
-                    showToast('Actualité modifiée avec succès', 'success');
-                } else {
-                    await db.collection('news').add(data);
-                    showToast('Actualité publiée avec succès', 'success');
-                }
-                
-                closeModal('newsModal');
-                loadNews();
-            } catch (error) {
-                showToast(error.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer';
-            }
-        });
-
-        async function deleteNews(id) {
-            if (!confirm('Supprimer cette actualité ?')) return;
-            try {
-                await db.collection('news').doc(id).delete();
-                showToast('Actualité supprimée', 'success');
-                loadNews();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        }
-
-        // ============ LIVE ============
-        async function loadLive() {
-            const list = document.getElementById('liveList');
-            list.innerHTML = '<div class="loading-spinner"></div>';
-            
-            try {
-                const snapshot = await db.collection('live').orderBy('timestamp', 'desc').get();
-                
-                if (snapshot.empty) {
-                    list.innerHTML = '<div class="empty-state"><i class="fas fa-broadcast-tower"></i><p>Aucun direct</p></div>';
-                    return;
-                }
-                
-                let html = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('fr-FR') : '';
-                    const platformIcon = data.platform === 'youtube' ? 'fa-youtube' : 'fa-facebook';
-                    const platformColor = data.platform === 'youtube' ? 'red' : 'blue';
-                    
-                    html += `
-                        <div class="item-card">
-                            <div class="item-info">
-                                <div class="item-title">${data.title}</div>
-                                <div class="item-meta">
-                                    <span class="badge badge-${platformColor}"><i class="fab ${platformIcon}"></i> ${data.platform}</span>
-                                    <span><i class="fas fa-calendar"></i> ${date}</span>
-                                    <span class="badge ${data.active ? 'badge-green' : 'badge-red'}">
-                                        ${data.active ? '● Actif' : '○ Inactif'}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="item-actions">
-                                <button class="btn-icon edit" onclick='editLive("${doc.id}", ${JSON.stringify(data)})'>
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-icon delete" onclick="deleteLive('${doc.id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                list.innerHTML = html;
-            } catch (error) {
-                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Erreur de chargement</p></div>';
-            }
-        }
-
-        function openLiveModal() {
-            document.getElementById('liveForm').reset();
-            document.getElementById('liveId').value = '';
-            document.getElementById('liveActive').checked = true;
-            document.getElementById('liveModalTitle').textContent = 'Nouveau direct';
-            openModal('liveModal');
-        }
-
-        function editLive(id, data) {
-            document.getElementById('liveId').value = id;
-            document.getElementById('liveTitle').value = data.title;
-            document.getElementById('livePlatform').value = data.platform;
-            document.getElementById('liveLink').value = data.link;
-            document.getElementById('liveActive').checked = data.active;
-            document.getElementById('liveModalTitle').textContent = 'Modifier le direct';
-            openModal('liveModal');
-        }
-
-        document.getElementById('liveForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('liveId').value;
-            const data = {
-                title: document.getElementById('liveTitle').value,
-                platform: document.getElementById('livePlatform').value,
-                link: document.getElementById('liveLink').value,
-                active: document.getElementById('liveActive').checked,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            try {
-                if (id) {
-                    await db.collection('live').doc(id).update(data);
-                    showToast('Direct modifié', 'success');
-                } else {
-                    await db.collection('live').add(data);
-                    showToast('Direct ajouté', 'success');
-                }
-                closeModal('liveModal');
-                loadLive();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        });
-
-        async function deleteLive(id) {
-            if (!confirm('Supprimer ce direct ?')) return;
-            try {
-                await db.collection('live').doc(id).delete();
-                showToast('Direct supprimé', 'success');
-                loadLive();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        }
-
-        // ============ DOWNLOADS ============
-        async function loadDownloads() {
-            const list = document.getElementById('downloadsList');
-            list.innerHTML = '<div class="loading-spinner"></div>';
-            
-            try {
-                const snapshot = await db.collection('downloads').orderBy('timestamp', 'desc').get();
-                
-                if (snapshot.empty) {
-                    list.innerHTML = '<div class="empty-state"><i class="fas fa-download"></i><p>Aucun fichier</p></div>';
-                    return;
-                }
-                
-                let html = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('fr-FR') : '';
-                    const typeIcons = {
-                        'pdf': 'fa-file-pdf',
-                        'doc': 'fa-file-word',
-                        'xls': 'fa-file-excel',
-                        'zip': 'fa-file-archive',
-                        'image': 'fa-file-image',
-                        'video': 'fa-file-video',
-                        'other': 'fa-file'
-                    };
-                    
-                    html += `
-                        <div class="item-card">
-                            <div class="item-info">
-                                <div class="item-title"><i class="fas ${typeIcons[data.type] || 'fa-file'}" style="color: var(--primary-yellow); margin-right: 0.5rem;"></i> ${data.title}</div>
-                                <div class="item-meta">
-                                    <span><i class="fas fa-calendar"></i> ${date}</span>
-                                    <span><i class="fab fa-google-drive"></i> Google Drive</span>
-                                </div>
-                                <div style="margin-top: 0.5rem; color: rgba(255,255,255,0.7); font-size: 0.9rem;">${data.description}</div>
-                            </div>
-                            <div class="item-actions">
-                                <button class="btn-icon view" onclick="window.open('${data.link}', '_blank')">
-                                    <i class="fas fa-external-link-alt"></i>
-                                </button>
-                                <button class="btn-icon edit" onclick='editDownload("${doc.id}", ${JSON.stringify(data)})'>
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-icon delete" onclick="deleteDownload('${doc.id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                list.innerHTML = html;
-            } catch (error) {
-                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Erreur de chargement</p></div>';
-            }
-        }
-
-        function openDownloadModal() {
-            document.getElementById('downloadForm').reset();
-            document.getElementById('downloadId').value = '';
-            document.getElementById('downloadModalTitle').textContent = 'Ajouter un fichier';
-            openModal('downloadModal');
-        }
-
-        function editDownload(id, data) {
-            document.getElementById('downloadId').value = id;
-            document.getElementById('downloadTitle').value = data.title;
-            document.getElementById('downloadDescription').value = data.description;
-            document.getElementById('downloadType').value = data.type;
-            document.getElementById('downloadLink').value = data.link;
-            document.getElementById('downloadModalTitle').textContent = 'Modifier le fichier';
-            openModal('downloadModal');
-        }
-
-        document.getElementById('downloadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('downloadId').value;
-            const data = {
-                title: document.getElementById('downloadTitle').value,
-                description: document.getElementById('downloadDescription').value,
-                type: document.getElementById('downloadType').value,
-                link: document.getElementById('downloadLink').value,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            try {
-                if (id) {
-                    await db.collection('downloads').doc(id).update(data);
-                    showToast('Fichier modifié', 'success');
-                } else {
-                    await db.collection('downloads').add(data);
-                    showToast('Fichier ajouté', 'success');
-                }
-                closeModal('downloadModal');
-                loadDownloads();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        });
-
-        async function deleteDownload(id) {
-            if (!confirm('Supprimer ce fichier ?')) return;
-            try {
-                await db.collection('downloads').doc(id).delete();
-                showToast('Fichier supprimé', 'success');
-                loadDownloads();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        }
-
-        // ============ SUBSCRIBERS ============
-        async function loadSubscribers() {
-            const list = document.getElementById('subscribersList');
-            list.innerHTML = '<div class="loading-spinner"></div>';
-            
-            try {
-                const snapshot = await db.collection('subscribers').orderBy('timestamp', 'desc').get();
-                
-                if (snapshot.empty) {
-                    list.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>Aucun abonné</p></div>';
-                    return;
-                }
-                
-                let html = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleDateString('fr-FR') : '';
-                    
-                    html += `
-                        <div class="item-card">
-                            <div class="item-info">
-                                <div class="item-title"><i class="fas fa-user" style="color: var(--primary-yellow); margin-right: 0.5rem;"></i> ${data.name}</div>
-                                <div class="item-meta">
-                                    <span><i class="fas fa-envelope"></i> ${data.email}</span>
-                                    <span><i class="fas fa-calendar"></i> ${date}</span>
-                                    <span class="badge ${data.active ? 'badge-green' : 'badge-red'}">
-                                        ${data.active ? '● Actif' : '○ Inactif'}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="item-actions">
-                                <button class="btn-icon view" onclick="copyEmail('${data.email}')">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                                <button class="btn-icon delete" onclick="deleteSubscriber('${doc.id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                list.innerHTML = html;
-            } catch (error) {
-                list.innerHTML = '<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Erreur de chargement</p></div>';
-            }
-        }
-
-        function copyEmail(email) {
-            navigator.clipboard.writeText(email).then(() => {
-                showToast('Email copié: ' + email, 'success');
-            });
-        }
-
-        async function deleteSubscriber(id) {
-            if (!confirm('Supprimer cet abonné ?')) return;
-            try {
-                await db.collection('subscribers').doc(id).delete();
-                showToast('Abonné supprimé', 'success');
-                loadSubscribers();
-            } catch (error) {
-                showToast(error.message, 'error');
-            }
-        }
-    </script>
+    function updateStats(){
+      $('#statNews').textContent=state.news.length||0;
+      $('#statCategories').textContent=state.categories.filter(c=>c.active!==false).length||0;
+      $('#statGalleries').textContent=state.galleries.length||0;
+      const audienceEmails=uniqueEmails([
+        ...state.members.map(m=>m.email),
+        ...state.subscribers.map(s=>s.email)
+      ]);
+      $('#statSubscribers').textContent=audienceEmails.length||0;
+    }
+  </script>
 </body>
 </html>
