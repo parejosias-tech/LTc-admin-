@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700;800;900&family=Lato:wght@400;700;900&family=Merriweather:wght@400;700;900&family=Montserrat:wght@400;500;600;700;800;900&family=Nunito:wght@400;500;600;700;800;900&family=Open+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&family=Poppins:wght@300;400;500;600;700;800;900&family=Roboto:wght@400;500;700;900&family=Source+Sans+3:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
@@ -204,6 +204,40 @@
       .stats{grid-template-columns:1fr}.item{grid-template-columns:1fr}.item-actions{justify-content:flex-end}
       .section-intro h2{font-size:1.4rem}.card{padding:14px}.settings-grid{gap:12px}
     }
+
+    /* V5 admin — édition visuelle & palette */
+    .color-control{height:48px;padding:5px;cursor:pointer}
+    .theme-preview{
+      min-height:80px;border-radius:14px;padding:14px;display:grid;grid-template-columns:46px minmax(0,1fr);
+      grid-template-rows:auto auto;gap:2px 12px;align-items:center;
+      background:linear-gradient(135deg,rgba(47,107,255,.16),rgba(244,207,93,.06));
+      border:1px solid rgba(255,255,255,.08)
+    }
+    .theme-preview span{grid-row:1/3;width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--preview-blue,#2F6BFF),var(--preview-yellow,#F4CF5D))}
+    .theme-preview strong{align-self:end}.theme-preview small{color:var(--muted);align-self:start}
+    .rich-toolbar{
+      display:flex;flex-wrap:wrap;gap:6px;padding:9px;border:1px solid rgba(255,255,255,.12);
+      border-bottom:0;border-radius:12px 12px 0 0;background:rgba(255,255,255,.055)
+    }
+    .toolbar-btn,.toolbar-select{
+      min-height:38px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:#fff;color:#111827;
+      padding:0 10px;font:700 .78rem/1 Poppins,sans-serif;cursor:pointer
+    }
+    .toolbar-btn{min-width:38px}
+    .toolbar-btn:hover,.toolbar-select:hover{background:#f1f5f9}
+    .toolbar-color{
+      min-height:38px;display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:8px;background:#fff;color:#111827;
+      font-size:.8rem
+    }
+    .toolbar-color input{width:28px;height:28px;border:0;padding:0;background:transparent}
+    .rich-editor{
+      min-height:250px;max-height:520px;overflow:auto;padding:16px;border-radius:0 0 12px 12px;
+      background:#fff;color:#111827;border:1px solid rgba(255,255,255,.12);line-height:1.75;outline:none
+    }
+    .rich-editor:focus{box-shadow:0 0 0 3px rgba(47,107,255,.18);border-color:#2f6bff}
+    .rich-editor:empty::before{content:attr(data-placeholder);color:#94a3b8}
+    .rich-editor h2,.rich-editor h3{margin:.8em 0 .4em}.rich-editor blockquote{border-left:4px solid #2f6bff;padding-left:12px;color:#475569}
+
   </style>
 </head>
 <body>
@@ -337,6 +371,7 @@
                 <select class="form-control" id="setBodyFont">
                   <option>Poppins</option><option>Inter</option><option>Roboto</option><option>Open Sans</option>
                   <option>Montserrat</option><option>Lato</option><option>Nunito</option><option>Source Sans 3</option>
+                  <option>Merriweather</option><option>Playfair Display</option><option>DM Serif Display</option>
                 </select>
                 <div class="help">Polices lisibles et professionnelles pour les paragraphes et interfaces.</div>
               </div>
@@ -345,11 +380,29 @@
                 <select class="form-control" id="setHeadingFont">
                   <option>Poppins</option><option>Inter</option><option>Roboto</option><option>Open Sans</option>
                   <option>Montserrat</option><option>Lato</option><option>Nunito</option><option>Source Sans 3</option>
+                  <option>Merriweather</option><option>Playfair Display</option><option>DM Serif Display</option>
                 </select>
               </div>
               <div class="font-preview" id="fontPreview">LTcine TV — Une communication claire au service de l'édification.</div>
             </div>
 
+
+            <div class="setting-card">
+              <h3><i class="fas fa-palette"></i> Couleurs du site</h3>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Bleu principal</label>
+                  <input class="form-control color-control" id="setBrandBlue" type="color" value="#2F6BFF">
+                </div>
+                <div class="form-group">
+                  <label>Jaune / or</label>
+                  <input class="form-control color-control" id="setBrandYellow" type="color" value="#F4CF5D">
+                </div>
+              </div>
+              <div class="theme-preview" id="themePreview">
+                <span></span><strong>LTcine TV</strong><small>Aperçu de l'identité</small>
+              </div>
+            </div>
             <div class="setting-card">
               <h3><i class="fas fa-house"></i> Accueil</h3>
               <div class="form-group"><label>Titre principal</label><input class="form-control" id="setHeroTitle" maxlength="180"></div>
@@ -432,7 +485,47 @@
               <div class="form-group"><label>Titre *</label><input class="form-control" id="newsTitle" required maxlength="220"></div>
               <div class="form-group"><label>Catégorie *</label><select class="form-control" id="newsCategory" required></select></div>
               <div class="form-group"><label>Résumé</label><textarea class="form-control" id="newsExcerpt" maxlength="600"></textarea></div>
-              <div class="form-group"><label>Contenu *</label><textarea class="form-control" id="newsContent" required maxlength="12000" style="min-height:220px"></textarea></div>
+              <div class="form-group">
+                <label>Contenu *</label>
+                <div class="rich-toolbar" id="newsRichToolbar">
+                  <select class="toolbar-select" id="richBlock" title="Style de paragraphe">
+                    <option value="p">Paragraphe</option>
+                    <option value="h2">Titre 2</option>
+                    <option value="h3">Titre 3</option>
+                    <option value="blockquote">Citation</option>
+                  </select>
+                  <select class="toolbar-select" id="richFont" title="Police">
+                    <option value="Poppins">Poppins</option>
+                    <option value="Inter">Inter</option>
+                    <option value="Montserrat">Montserrat</option>
+                    <option value="Roboto">Roboto</option>
+                    <option value="Open Sans">Open Sans</option>
+                    <option value="Merriweather">Merriweather</option>
+                    <option value="Playfair Display">Playfair Display</option>
+                  </select>
+                  <select class="toolbar-select" id="richSize" title="Taille">
+                    <option value="3">Normal</option>
+                    <option value="2">Petit</option>
+                    <option value="4">Moyen</option>
+                    <option value="5">Grand</option>
+                    <option value="6">Très grand</option>
+                  </select>
+                  <button type="button" class="toolbar-btn" data-rich-command="bold" title="Gras"><b>B</b></button>
+                  <button type="button" class="toolbar-btn" data-rich-command="italic" title="Italique"><i>I</i></button>
+                  <button type="button" class="toolbar-btn" data-rich-command="underline" title="Souligné"><u>U</u></button>
+                  <button type="button" class="toolbar-btn" data-rich-command="insertUnorderedList" title="Liste à puces"><i class="fas fa-list-ul"></i></button>
+                  <button type="button" class="toolbar-btn" data-rich-command="insertOrderedList" title="Liste numérotée"><i class="fas fa-list-ol"></i></button>
+                  <button type="button" class="toolbar-btn" data-rich-command="justifyLeft" title="Aligner à gauche"><i class="fas fa-align-left"></i></button>
+                  <button type="button" class="toolbar-btn" data-rich-command="justifyCenter" title="Centrer"><i class="fas fa-align-center"></i></button>
+                  <button type="button" class="toolbar-btn" data-rich-command="justifyRight" title="Aligner à droite"><i class="fas fa-align-right"></i></button>
+                  <label class="toolbar-color" title="Couleur du texte"><i class="fas fa-font"></i><input type="color" id="richColor" value="#111827"></label>
+                  <label class="toolbar-color" title="Surlignage"><i class="fas fa-highlighter"></i><input type="color" id="richHighlight" value="#fff3b0"></label>
+                  <button type="button" class="toolbar-btn" data-rich-command="removeFormat" title="Effacer la mise en forme">Tx</button>
+                </div>
+                <div class="rich-editor" id="newsContentEditor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Rédigez votre contenu ici…"></div>
+                <textarea id="newsContent" class="hidden" maxlength="12000"></textarea>
+                <div class="help">La mise en forme est enregistrée sans modifier votre API ni vos collections existantes.</div>
+              </div>
               <div class="form-group"><label>URL d'une image</label><input class="form-control" id="newsImageUrl" type="url" maxlength="1000"><div class="help">Utilisez votre hébergeur d'images externe si nécessaire.</div></div>
               <div class="actions">
                 <button class="btn btn-primary" type="submit"><i class="fas fa-paper-plane"></i> Publier / enregistrer</button>
@@ -681,7 +774,9 @@
       galleryText:"Après une prestation LTcine TV, recherchez votre événement puis ouvrez directement sa galerie ou son espace média.",
       tickerSpeed:18,
       bodyFont:'Poppins',
-      headingFont:'Poppins'
+      headingFont:'Poppins',
+      brandBlue:'#2F6BFF',
+      brandYellow:'#F4CF5D'
     };
 
     const $ = (s,p=document)=>p.querySelector(s);
@@ -800,13 +895,14 @@
       setSearchPlaceholder:'searchPlaceholder',setAboutTitle:'aboutTitle',setAboutText1:'aboutText1',setAboutText2:'aboutText2',
       setWhatsapp:'whatsapp',setEmail:'email',setLocation:'location',setFacebook:'facebook',setYoutube:'youtube',setTiktok:'tiktok',
       setGalleryTitle:'galleryTitle',setGalleryText:'galleryText',setTickerSpeed:'tickerSpeed',
-      setBodyFont:'bodyFont',setHeadingFont:'headingFont'
+      setBodyFont:'bodyFont',setHeadingFont:'headingFont',setBrandBlue:'brandBlue',setBrandYellow:'brandYellow'
     };
     async function loadSettings(){
       const snap=await db.collection('siteSettings').doc('general').get();
       const d={...DEFAULT_SETTINGS,...(snap.exists?snap.data():{})};
       Object.entries(settingMap).forEach(([id,key])=>{const el=$('#'+id);if(el)el.value=d[key]??''});
       updateFontPreview();
+      updateThemePreview();
     }
     $('#settingsForm').addEventListener('submit',async e=>{
       e.preventDefault();const btn=$('#saveSettingsBtn');btn.disabled=true;
@@ -833,6 +929,15 @@
     }
     $('#setBodyFont')?.addEventListener('change',updateFontPreview);
     $('#setHeadingFont')?.addEventListener('change',updateFontPreview);
+
+
+    function updateThemePreview(){
+      const box=$('#themePreview'); if(!box) return;
+      box.style.setProperty('--preview-blue',$('#setBrandBlue')?.value||'#2F6BFF');
+      box.style.setProperty('--preview-yellow',$('#setBrandYellow')?.value||'#F4CF5D');
+    }
+    $('#setBrandBlue')?.addEventListener('input',updateThemePreview);
+    $('#setBrandYellow')?.addEventListener('input',updateThemePreview);
 
     /* CATEGORIES */
     async function loadCategories(){
@@ -891,6 +996,55 @@
       $('#'+prefix+'Form').reset();$('#'+prefix+'EditingId').value='';$('#'+prefix+'Cancel').classList.add('hidden');
     }
 
+
+    /* RICH TEXT EDITOR */
+    const newsEditor=$('#newsContentEditor');
+
+    function execRich(command,value=null){
+      newsEditor?.focus();
+      document.execCommand(command,false,value);
+      syncRichEditor();
+    }
+
+    function sanitizeAdminRichHtml(value){
+      if(typeof value!=='string') return '';
+      const template=document.createElement('template');
+      template.innerHTML=value;
+      const allowed=new Set(['P','BR','STRONG','B','EM','I','U','H2','H3','H4','BLOCKQUOTE','UL','OL','LI','SPAN']);
+      const styles=new Set(['color','background-color','text-align','font-family','font-size']);
+      const walk=node=>{
+        [...node.childNodes].forEach(child=>{
+          if(child.nodeType===Node.ELEMENT_NODE){
+            if(!allowed.has(child.tagName)){child.replaceWith(...child.childNodes);return}
+            [...child.attributes].forEach(attr=>{
+              if(attr.name==='style'){
+                const parts=attr.value.split(';').map(x=>x.trim()).filter(Boolean).filter(part=>styles.has(part.split(':')[0]?.trim().toLowerCase()));
+                if(parts.length) child.setAttribute('style',parts.join(';')); else child.removeAttribute('style');
+              }else child.removeAttribute(attr.name);
+            });
+            walk(child);
+          }else if(child.nodeType!==Node.TEXT_NODE) child.remove();
+        });
+      };
+      walk(template.content);
+      return template.innerHTML.slice(0,30000);
+    }
+
+    function syncRichEditor(){
+      if(!newsEditor) return;
+      const plain=(newsEditor.innerText||'').trim().slice(0,12000);
+      $('#newsContent').value=plain;
+    }
+
+    newsEditor?.addEventListener('input',syncRichEditor);
+    $$('[data-rich-command]').forEach(btn=>btn.addEventListener('click',()=>execRich(btn.dataset.richCommand)));
+    $('#richBlock')?.addEventListener('change',e=>execRich('formatBlock',e.target.value));
+    $('#richFont')?.addEventListener('change',e=>execRich('fontName',e.target.value));
+    $('#richSize')?.addEventListener('change',e=>execRich('fontSize',e.target.value));
+    $('#richColor')?.addEventListener('input',e=>execRich('foreColor',e.target.value));
+    $('#richHighlight')?.addEventListener('input',e=>execRich('hiliteColor',e.target.value));
+
+
     /* NEWS */
     async function loadNews(){
       const snap=await db.collection('news').orderBy('timestamp','desc').limit(100).get();
@@ -916,12 +1070,20 @@
     $('#newsSearch').addEventListener('input',renderNewsList);
     function editNews(n){
       $('#newsEditingId').value=n.id;$('#newsTitle').value=n.title||'';$('#newsCategory').value=n.category||'';$('#newsExcerpt').value=n.excerpt||'';$('#newsContent').value=n.content||'';$('#newsImageUrl').value=n.imageUrl||n.image||'';
+      if(newsEditor){
+        if(n.contentHtml) newsEditor.innerHTML=sanitizeAdminRichHtml(n.contentHtml);
+        else newsEditor.textContent=n.content||'';
+      }
       $('#newsFormTitle').textContent='Modifier le contenu';$('#newsCancel').classList.remove('hidden');showSection('news');window.scrollTo({top:0,behavior:'smooth'});
     }
-    $('#newsCancel').onclick=()=>{cancelForm('news');$('#newsFormTitle').textContent='Nouveau contenu'};
+    $('#newsCancel').onclick=()=>{cancelForm('news');if(newsEditor)newsEditor.innerHTML='';$('#newsFormTitle').textContent='Nouveau contenu'};
     $('#newsForm').addEventListener('submit',async e=>{
       e.preventDefault();const id=$('#newsEditingId').value;
-      const payload={title:text($('#newsTitle').value,220),category:text($('#newsCategory').value,80),excerpt:text($('#newsExcerpt').value,600),content:text($('#newsContent').value,12000),imageUrl:safeUrl($('#newsImageUrl').value),updatedAt:serverTimestamp()};
+      syncRichEditor();
+      const plainContent=text($('#newsContent').value,12000);
+      if(!plainContent){toast('Le contenu est obligatoire.','error');newsEditor?.focus();return}
+      const richContent=sanitizeAdminRichHtml(newsEditor?.innerHTML||'');
+      const payload={title:text($('#newsTitle').value,220),category:text($('#newsCategory').value,80),excerpt:text($('#newsExcerpt').value,600),content:plainContent,contentHtml:richContent,imageUrl:safeUrl($('#newsImageUrl').value),updatedAt:serverTimestamp()};
       if(!id)payload.timestamp=serverTimestamp();
       try{const ref=id?db.collection('news').doc(id):db.collection('news').doc();await ref.set(payload,{merge:true});toast('Contenu enregistré.');$('#newsCancel').click();await loadNews()}
       catch(err){console.error(err);toast("Impossible d'enregistrer le contenu.",'error')}
