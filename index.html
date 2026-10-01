@@ -489,7 +489,29 @@
 
       <!-- Live -->
       <section class="admin-section" id="section-live">
-        <div class="section-intro"><h2>Directs</h2><p>Activez ou désactivez les directs YouTube et Facebook.</p></div>
+        <div class="section-intro"><h2>Directs</h2><p>YouTube est surveillé automatiquement. Les directs manuels restent disponibles pour Facebook ou un lien exceptionnel.</p></div>
+
+        <div class="card youtube-admin-status" id="youtubeAdminStatus">
+          <div class="card-head">
+            <div>
+              <div class="card-title"><i class="fab fa-youtube"></i> YouTube LTcine TV — détection automatique</div>
+              <div class="card-sub">Chaîne : UCD56Xq7Nn9EM9_sDTBmMxVw</div>
+            </div>
+            <span class="badge off" id="youtubeAdminBadge">Hors ligne</span>
+          </div>
+          <div id="youtubeAdminDetails" class="item">
+            <div>
+              <div class="item-title" id="youtubeAdminTitle">Aucun direct détecté</div>
+              <div class="item-meta"><span id="youtubeAdminChecked">En attente de la première vérification GitHub Actions.</span></div>
+            </div>
+            <div class="item-actions">
+              <a class="btn btn-secondary" id="youtubeAdminOpen" href="https://www.youtube.com/channel/UCD56Xq7Nn9EM9_sDTBmMxVw/live" target="_blank" rel="noopener noreferrer">
+                <i class="fab fa-youtube"></i> Ouvrir YouTube
+              </a>
+            </div>
+          </div>
+        </div>
+
         <div class="grid-2">
           <div class="card">
             <div class="card-title" id="liveFormTitle">Nouveau direct</div>
@@ -529,11 +551,11 @@
       <section class="admin-section" id="section-members">
         <div class="section-intro">
           <h2>Membres</h2>
-          <p>Profils créés par Google ou par formulaire. Les informations personnelles restent réservées à l'administration.</p>
+          <p>Comptes créés avec Google ou avec e-mail/mot de passe. Le panel affiche uniquement l'identité du compte et sa préférence de communication.</p>
         </div>
         <div class="card">
           <div class="card-head">
-            <div><div class="card-title">Comptes membres</div><div class="card-sub">Prénom, nom, âge, ville, e-mail et préférence de communication.</div></div>
+            <div><div class="card-title">Comptes membres</div><div class="card-sub">Nom Google lorsqu’il existe, adresse e-mail, fournisseur de connexion et préférence e-mail.</div></div>
           </div>
           <div class="list" id="membersList"></div>
         </div>
@@ -757,7 +779,7 @@
 
     async function initializeAdmin(){
       await ensureDefaults();
-      await Promise.allSettled([loadSettings(),loadCategories(),loadNews(),loadTicker(),loadVerses(),loadLive(),loadGalleries(),loadMembers(),loadSubscribers()]);
+      await Promise.allSettled([loadSettings(),loadCategories(),loadNews(),loadTicker(),loadVerses(),loadYouTubeAdminStatus(),loadLive(),loadGalleries(),loadMembers(),loadSubscribers()]);
       updateStats();
     }
 
@@ -945,6 +967,44 @@
       try{await (id?db.collection('verses').doc(id):db.collection('verses').doc()).set(payload,{merge:true});toast('Verset enregistré.');$('#verseCancel').click();await loadVerses()}catch(err){console.error(err);toast('Erreur.','error')}
     });
 
+
+    /* YOUTUBE LIVE AUTO */
+    const YOUTUBE_CHANNEL_ID = 'UCD56Xq7Nn9EM9_sDTBmMxVw';
+
+    async function loadYouTubeAdminStatus(){
+      try{
+        const response=await fetch(`youtube-live.json?t=${Date.now()}`,{cache:'no-store'});
+        if(!response.ok) throw new Error(`HTTP ${response.status}`);
+        const status=await response.json();
+
+        const badge=$('#youtubeAdminBadge');
+        const title=$('#youtubeAdminTitle');
+        const checked=$('#youtubeAdminChecked');
+        const open=$('#youtubeAdminOpen');
+
+        if(status.isLive===true && status.videoId){
+          badge.textContent='EN DIRECT';
+          badge.className='badge badge-red';
+          title.textContent=status.title||'LTcine TV est en direct';
+          if(open) open.href=status.url||`https://www.youtube.com/watch?v=${status.videoId}`;
+        }else{
+          badge.textContent='Hors ligne';
+          badge.className='badge off';
+          title.textContent='Aucun direct YouTube détecté';
+          if(open) open.href=`https://www.youtube.com/channel/${YOUTUBE_CHANNEL_ID}/live`;
+        }
+
+        const d=status.checkedAt?new Date(status.checkedAt):null;
+        checked.textContent=d && !Number.isNaN(d.getTime())
+          ? `Dernière vérification : ${new Intl.DateTimeFormat('fr-FR',{dateStyle:'short',timeStyle:'short'}).format(d)}`
+          : 'Statut YouTube chargé.';
+      }catch(err){
+        console.error('Statut YouTube:',err);
+        if($('#youtubeAdminChecked')) $('#youtubeAdminChecked').textContent='Statut automatique indisponible pour le moment.';
+      }
+    }
+
+
     /* LIVE */
     async function loadLive(){
       const snap=await db.collection('live').orderBy('timestamp','desc').limit(50).get();state.live=snap.docs.map(d=>({id:d.id,...d.data()}));renderLiveList()
@@ -1010,18 +1070,24 @@
       state.members.forEach(m=>{
         const el=document.createElement('div'); el.className='item';
         const left=document.createElement('div');
-        const name=[m.firstName,m.lastName].filter(Boolean).join(' ') || 'Membre';
-        const title=document.createElement('div'); title.className='item-title'; title.textContent=name;
+
+        const displayName=text(m.displayName || [m.firstName,m.lastName].filter(Boolean).join(' '),130);
+        const identity=displayName || m.email || 'Membre';
+        const title=document.createElement('div'); title.className='item-title'; title.textContent=identity;
+
         const meta=document.createElement('div'); meta.className='item-meta';
         const parts=[
-          m.email||'',
-          m.city ? `Ville : ${m.city}` : '',
-          m.age ? `Âge : ${m.age}` : '',
-          m.provider ? `Connexion : ${m.provider}` : ''
+          displayName && m.email ? m.email : '',
+          m.provider ? `Connexion : ${m.provider.includes('google')?'Google':'E-mail'}` : ''
         ].filter(Boolean);
         parts.forEach(v=>{const s=document.createElement('span');s.textContent=v;meta.appendChild(s)});
-        const badge=document.createElement('span');badge.className=`badge ${m.emailOptIn?'':'off'}`;badge.textContent=m.emailOptIn?'E-mail accepté':'Pas d’e-mail';meta.appendChild(badge);
-        left.append(title,meta);el.append(left);box.appendChild(el);
+
+        const badge=document.createElement('span');
+        badge.className=`badge ${m.emailOptIn?'':'off'}`;
+        badge.textContent=m.emailOptIn?'E-mail accepté':'Pas d’e-mail';
+        meta.appendChild(badge);
+
+        left.append(title,meta); el.append(left); box.appendChild(el);
       });
     }
 
@@ -1114,6 +1180,8 @@
         el.append(left);box.appendChild(el)
       })
     }
+
+    setInterval(loadYouTubeAdminStatus, 60000);
 
     function updateStats(){
       $('#statNews').textContent=state.news.length||0;
